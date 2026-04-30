@@ -1,35 +1,54 @@
 # ── Dependencies ────────────────────────────────────────────
 node_modules/
 .pnpm-store/
+.npm/
 
 # ── Build outputs ───────────────────────────────────────────
 dist/
 build/
 .angular/
+# Ignorar salidas de compilación específicas de apps
+apps/*/dist/
 
-# ── Nx cache ────────────────────────────────────────────────
+# ── Nx & Cache ──────────────────────────────────────────────
 .nx/cache
 .nx/workspace-data
+.cache/
 
-# ── Environment ─────────────────────────────────────────────
+# ── Environment / Secrets ───────────────────────────────────
 .env
 .env.local
 .env.*.local
+*.pem
+*.key
 
 # ── Logs ────────────────────────────────────────────────────
 *.log
 npm-debug.log*
 pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # ── OS / IDE ────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
-.vscode/settings.json
+# Bloquear toda la carpeta .vscode, no solo el settings.json
+.vscode/
+!.vscode/extensions.json
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # ── Test / Coverage ─────────────────────────────────────────
 coverage/
 .vitest-cache/
+htmlcov/
+.tox/
+.pytest_cache/
 
-# ── Lighthouse ──────────────────────────────────────────────
+# ── Lighthouse & Tools ──────────────────────────────────────
 lighthouse-results/
+.pnpm-debug.log
