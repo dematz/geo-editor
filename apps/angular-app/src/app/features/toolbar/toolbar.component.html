@@ -1,0 +1,23 @@
+<div class="toolbar">
+  <!-- Import -->
+  <label class="btn btn-primary" for="file-input">
+    📂 Importar GeoJSON
+  </label>
+  <input
+    id="file-input"
+    type="file"
+    accept=".geojson,.json"
+    (change)="onFileSelected($event)"
+    hidden
+  />
+
+  <!-- Export -->
+  <button class="btn btn-secondary" (click)="onExport()">
+    💾 Exportar GeoJSON
+  </button>
+
+  <!-- Clear -->
+  <button class="btn btn-danger" (click)="onClear()">
+    🗑 Limpiar todo
+  </button>
+</div>
