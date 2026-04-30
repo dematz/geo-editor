@@ -12,19 +12,19 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,html,scss,json}\""
   },
   "devDependencies": {
-    "@nx/angular": "^22.0.0",
-    "@nx/eslint": "^22.0.0",
-    "@nx/js": "^22.0.0",
-    "@nx/react": "^22.0.0",
-    "@nx/vite": "^22.0.0",
-    "@types/geojson": "^7946.0.16",
-    "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^7.18.0",
-    "@vitest/coverage-v8": "^1.6.1",
-    "eslint": "^9.39.4",
-    "nx": "^22.0.0",
-    "prettier": "^3.8.3",
-    "typescript": "^5.5.4",
-    "vitest": "^1.6.1"
+    "@nx/js": "19.8.4",
+    "@nx/angular": "19.8.4",
+    "@nx/react": "19.8.4",
+    "@nx/vite": "19.8.4",
+    "@nx/eslint": "19.8.4",
+    "nx": "19.8.4",
+    "typescript": "^5.4.0",
+    "@types/geojson": "*",
+    "eslint": "^9.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "prettier": "^3.0.0",
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0"
   }
 }
