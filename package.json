@@ -1,0 +1,30 @@
+{
+  "name": "geo-editor",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "serve:angular": "nx serve angular-app",
+    "serve:react": "nx serve react-app",
+    "build:all": "nx run-many --target=build --all",
+    "test:all": "nx run-many --target=test --all",
+    "lint:all": "nx run-many --target=lint --all",
+    "format": "prettier --write \"**/*.{ts,tsx,html,scss,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,html,scss,json}\""
+  },
+  "devDependencies": {
+    "@nx/angular": "^22.0.0",
+    "@nx/eslint": "^22.0.0",
+    "@nx/js": "^22.0.0",
+    "@nx/react": "^22.0.0",
+    "@nx/vite": "^22.0.0",
+    "@types/geojson": "^7946.0.16",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitest/coverage-v8": "^1.6.1",
+    "eslint": "^9.39.4",
+    "nx": "^22.0.0",
+    "prettier": "^3.8.3",
+    "typescript": "^5.5.4",
+    "vitest": "^1.6.1"
+  }
+}

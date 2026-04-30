@@ -1,0 +1,56 @@
+version: '3.9'
+
+# ============================================================
+# geo-editor — Docker Compose
+# Builds and runs both Angular and React apps via Nginx
+# ============================================================
+
+services:
+  # ── Angular App ─────────────────────────────────────────
+  angular-client:
+    build:
+      context: .
+      dockerfile: apps/angular-app/Dockerfile
+    ports:
+      - "${ANGULAR_PORT:-4200}:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    volumes:
+      - shared-core:/app/libs/core/dist
+    networks:
+      - geo-net
+
+  # ── React App ───────────────────────────────────────────
+  react-client:
+    build:
+      context: .
+      dockerfile: apps/react-app/Dockerfile
+    ports:
+      - "${REACT_PORT:-3000}:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_TILE_URL=${VITE_TILE_URL:-https://tile.openstreetmap.org/{z}/{x}/{y}.png}
+      - VITE_STORAGE_KEY=${VITE_STORAGE_KEY:-poi_editor_state}
+    restart: unless-stopped
+    volumes:
+      - shared-core:/app/libs/core/dist
+    networks:
+      - geo-net
+
+  # ── Lighthouse CI (optional) ────────────────────────────
+  # lighthouse:
+  #   image: patrickhulce/lhci-client:latest
+  #   depends_on: [angular-client, react-client]
+  #   command: ["lhci", "autorun"]
+  #   volumes:
+  #     - ./lighthouse-results:/app/lighthouse-results
+  #   networks:
+  #     - geo-net
+
+volumes:
+  shared-core:
+
+networks:
+  geo-net:
+    driver: bridge
