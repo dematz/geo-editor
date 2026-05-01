@@ -129,6 +129,9 @@ importers:
 
   apps/react-app:
     dependencies:
+      '@geo-editor/core':
+        specifier: workspace:*
+        version: link:../../libs/core
       maplibre-gl:
         specifier: ^5.24.0
         version: 5.24.0

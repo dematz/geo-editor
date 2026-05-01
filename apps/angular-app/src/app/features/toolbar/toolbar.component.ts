@@ -10,7 +10,7 @@ import type { ImportResult } from '@geo-editor/core';
 })
 export class ToolbarComponent {
   private readonly fileIo = inject(FileIoService);
-  private readonly poiSvc = inject(PoiService);
+  readonly poiSvc = inject(PoiService);
 
   readonly importDone = output<ImportResult>();
 
@@ -20,7 +20,10 @@ export class ToolbarComponent {
     try {
       const result = await this.fileIo.importGeoJson(file);
       if (result.imported.length > 0) {
-        this.poiSvc.loadCollection({ type: 'FeatureCollection', features: result.imported });
+        this.poiSvc.loadCollection({
+          type: 'FeatureCollection',
+          features: [...this.poiSvc.collection().features, ...result.imported],
+        });
       }
       this.importDone.emit(result);
     } catch (err) {
