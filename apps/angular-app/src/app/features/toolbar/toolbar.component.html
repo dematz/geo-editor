@@ -1,5 +1,4 @@
 <div class="toolbar">
-  <!-- Import -->
   <label class="btn btn-primary" for="file-input">
     📂 Importar GeoJSON
   </label>
@@ -11,12 +10,26 @@
     hidden
   />
 
-  <!-- Export -->
   <button class="btn btn-secondary" (click)="onExport()">
     💾 Exportar GeoJSON
   </button>
 
-  <!-- Clear -->
+  <!-- Undo / Redo -->
+  <button
+    class="btn btn-secondary"
+    (click)="poiSvc.undo()"
+    [disabled]="!poiSvc.canUndo()"
+    title="Deshacer (Ctrl+Z)">
+    ↩ Deshacer
+  </button>
+  <button
+    class="btn btn-secondary"
+    (click)="poiSvc.redo()"
+    [disabled]="!poiSvc.canRedo()"
+    title="Rehacer (Ctrl+Y)">
+    ↪ Rehacer
+  </button>
+
   <button class="btn btn-danger" (click)="onClear()">
     🗑 Limpiar todo
   </button>

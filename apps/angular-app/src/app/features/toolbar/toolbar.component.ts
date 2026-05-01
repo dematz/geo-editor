@@ -9,8 +9,8 @@ import type { ImportResult } from '@geo-editor/core';
   templateUrl: './toolbar.component.html',
 })
 export class ToolbarComponent {
-  private readonly fileIo = inject(FileIoService);
   readonly poiSvc = inject(PoiService);
+  private readonly fileIo = inject(FileIoService);
 
   readonly importDone = output<ImportResult>();
 
