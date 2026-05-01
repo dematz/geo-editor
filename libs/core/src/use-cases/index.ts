@@ -7,7 +7,8 @@ export { inferCategory } from './ai-smart-fixer/category-inference';
 export { repairCoordinates } from './ai-smart-fixer/coordinate-repair';
 export type { FixerResult, SmartFixerSummary } from './ai-smart-fixer/smart-fixer';
 export type { CoordRepairResult } from './ai-smart-fixer/coordinate-repair';
-// History / Undo-Redo
 export { initHistory, applyCommand, undoHistory, redoHistory, canUndo, canRedo } from './history/command.types';
 export type { Command, HistoryState } from './history/command.types';
 export { addPoiCommand, removePoiCommand, updatePoiCommand, loadCollectionCommand } from './history/poi.commands';
+export { snapToGrid } from './snap/snap';
+export type { SnapOptions } from './snap/snap';

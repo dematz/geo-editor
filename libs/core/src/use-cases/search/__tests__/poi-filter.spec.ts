@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { filterPois } from '../poi-filter';
-import { createPoi, addPoi, emptyCollection } from '../../poi.use-cases';
+import { createPoi } from '../../poi.use-cases';
 
 const coords = { lng: -74.07, lat: 4.71 };
 const features = [

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import maplibregl, { Map } from 'maplibre-gl';
 import type { PoiFeatureCollection } from '@geo-editor/core';
+import { snapToGrid } from '@geo-editor/core';
 
 const OSM_STYLE = {
   version: 8 as const,
@@ -24,11 +25,10 @@ export function useMapLibre(
   containerRef: React.RefObject<HTMLDivElement | null>,
   onMapClick: (coords: { lng: number; lat: number }) => void
 ) {
-  const mapRef       = useRef<Map | null>(null);
-  const styleLoaded  = useRef(false);
-  const onClickRef   = useRef(onMapClick);
+  const mapRef      = useRef<Map | null>(null);
+  const styleLoaded = useRef(false);
+  const onClickRef  = useRef(onMapClick);
 
-  // Keep click handler fresh without re-running the effect
   onClickRef.current = onMapClick;
 
   useEffect(() => {
@@ -51,7 +51,9 @@ export function useMapLibre(
     map.on('click', (e) => {
       const features = map.queryRenderedFeatures(e.point, { layers: [LAYER_ID] });
       if (features.length === 0) {
-        onClickRef.current({ lng: e.lngLat.lng, lat: e.lngLat.lat });
+        // ── Snap coordinates to 4-decimal grid (~11m precision) ──
+        const snapped = snapToGrid(e.lngLat.lng, e.lngLat.lat);
+        onClickRef.current(snapped);
       }
     });
 

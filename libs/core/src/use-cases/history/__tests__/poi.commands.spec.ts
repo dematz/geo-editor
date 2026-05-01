@@ -38,7 +38,6 @@ describe('loadCollectionCommand', () => {
 
 describe('updatePoiCommand', () => {
   it('updates poi and reverts on undo via history', () => {
-    const poi = createPoi(coords, 'Original', 'park');
     let h = applyCommand(history(), addPoiCommand(coords, 'Original', 'park'));
     const id = h.present.features[0].id!;
 
@@ -59,8 +58,8 @@ describe('updatePoiCommand', () => {
 
 describe('removePoiCommand', () => {
   it('has correct description', () => {
-    const poi = createPoi(coords, 'Test POI', 'park');
-    const cmd = removePoiCommand(poi);
+    const testPoi = createPoi(coords, 'Test POI', 'park');
+    const cmd = removePoiCommand(testPoi);
     expect(cmd.description).toContain('Test POI');
   });
 });

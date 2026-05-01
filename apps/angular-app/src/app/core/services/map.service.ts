@@ -1,6 +1,7 @@
 import { Injectable, NgZone, inject } from '@angular/core';
 import maplibregl, { Map, MapMouseEvent } from 'maplibre-gl';
 import type { PoiFeatureCollection } from '@geo-editor/core';
+import { snapToGrid } from '@geo-editor/core';
 
 const OSM_STYLE = {
   version: 8 as const,
@@ -21,12 +22,11 @@ export class MapService {
   private readonly zone = inject(NgZone);
   private styleLoaded = false;
 
-  private readonly SOURCE_ID         = 'pois-source';
-  private readonly LAYER_ID          = 'pois-layer';
-  private readonly CLUSTER_ID        = 'pois-cluster';
-  private readonly CLUSTER_COUNT_ID  = 'pois-cluster-count';
+  private readonly SOURCE_ID        = 'pois-source';
+  private readonly LAYER_ID         = 'pois-layer';
+  private readonly CLUSTER_ID       = 'pois-cluster';
+  private readonly CLUSTER_COUNT_ID = 'pois-cluster-count';
 
-  // ── Init ──────────────────────────────────────────────
   initMap(
     container: HTMLElement,
     onMapClick: (coords: { lng: number; lat: number }) => void
@@ -49,7 +49,9 @@ export class MapService {
           layers: [this.LAYER_ID],
         });
         if (features.length === 0) {
-          this.zone.run(() => onMapClick({ lng: e.lngLat.lng, lat: e.lngLat.lat }));
+          // ── Snap coordinates to 4-decimal grid (~11m precision) ──
+          const snapped = snapToGrid(e.lngLat.lng, e.lngLat.lat);
+          this.zone.run(() => onMapClick(snapped));
         }
       });
 
@@ -62,7 +64,6 @@ export class MapService {
     });
   }
 
-  // ── Update POIs on map ────────────────────────────────
   updateData(collection: PoiFeatureCollection): void {
     if (!this.styleLoaded) return;
     const source = this.map.getSource(this.SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
@@ -71,19 +72,17 @@ export class MapService {
     }
   }
 
-  // ── Fly to coordinates ────────────────────────────────
   flyTo(lng: number, lat: number): void {
     this.map?.flyTo({ center: [lng, lat], zoom: 14, speed: 1.5 });
   }
 
-  // ── Highlight selected POI ────────────────────────────
   highlightPoi(id: string | number | null): void {
     if (!this.styleLoaded) return;
     this.map.setPaintProperty(this.LAYER_ID, 'circle-color', [
       'case',
       ['==', ['id'], id ?? ''],
-      '#F59E0B', // selected: amber
-      '#2563EB', // default: blue
+      '#F59E0B',
+      '#2563EB',
     ]);
   }
 
@@ -91,7 +90,6 @@ export class MapService {
     this.map?.remove();
   }
 
-  // ── Private: source + layers setup ───────────────────
   private setupSourceAndLayers(): void {
     this.map.addSource(this.SOURCE_ID, {
       type: 'geojson',
@@ -101,7 +99,6 @@ export class MapService {
       clusterRadius: 50,
     });
 
-    // Cluster circles
     this.map.addLayer({
       id: this.CLUSTER_ID,
       type: 'circle',
@@ -117,7 +114,6 @@ export class MapService {
       },
     });
 
-    // Cluster count label
     this.map.addLayer({
       id: this.CLUSTER_COUNT_ID,
       type: 'symbol',
@@ -130,7 +126,6 @@ export class MapService {
       paint: { 'text-color': '#FFFFFF' },
     });
 
-    // Individual POI circles
     this.map.addLayer({
       id: this.LAYER_ID,
       type: 'circle',
