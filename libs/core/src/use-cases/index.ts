@@ -2,3 +2,8 @@ export { validateFeatureCollection } from './validators/geojson.validator';
 export { createPoi, updatePoi, deletePoi, addPoi, emptyCollection } from './poi.use-cases';
 export { filterPois } from './search/poi-filter';
 export type { FilterOptions } from './search/poi-filter';
+export { applySmartFixer, applySmartFixerToCollection } from './ai-smart-fixer/smart-fixer';
+export { inferCategory } from './ai-smart-fixer/category-inference';
+export { repairCoordinates } from './ai-smart-fixer/coordinate-repair';
+export type { FixerResult, SmartFixerSummary } from './ai-smart-fixer/smart-fixer';
+export type { CoordRepairResult } from './ai-smart-fixer/coordinate-repair';

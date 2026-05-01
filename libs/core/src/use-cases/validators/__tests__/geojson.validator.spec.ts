@@ -41,12 +41,14 @@ describe('validateFeatureCollection', () => {
     expect(result.errors[0].reason).toBe('MISSING_NAME');
   });
 
-  it('rejects missing category', () => {
+  // Smart Fixer now accepts missing category and defaults to 'other'
+  it('imports feature with missing category (Smart Fixer fallback to "other")', () => {
     const result = validateFeatureCollection({
       type: 'FeatureCollection',
       features: [{ ...validFeature, properties: { name: 'Valid Name' } }],
     });
-    expect(result.errors[0].reason).toBe('MISSING_CATEGORY');
+    expect(result.errors).toHaveLength(0);
+    expect(result.imported[0].properties.category).toBe('other');
   });
 
   it('imports valid and discards invalid in mixed collection', () => {
@@ -86,5 +88,15 @@ describe('validateFeatureCollection', () => {
       features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [-74, 4] }, properties: null }],
     });
     expect(result.errors[0].reason).toBe('MISSING_PROPERTIES');
+  });
+
+  it('appends Smart Fixer suffix when categories are inferred', () => {
+    const result = validateFeatureCollection({
+      type: 'FeatureCollection',
+      features: [
+        { type: 'Feature', geometry: { type: 'Point', coordinates: [-74, 4.7] }, properties: { name: 'Cafe Velvet', category: 'other' } },
+      ],
+    });
+    expect(result.summary).toMatch(/IA:/);
   });
 });

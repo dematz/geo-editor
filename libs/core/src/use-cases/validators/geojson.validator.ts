@@ -4,6 +4,9 @@ import type {
   ValidationErrorReason,
   ImportResult,
 } from '../../domain';
+import { repairCoordinates } from '../ai-smart-fixer/coordinate-repair';
+import { inferCategory } from '../ai-smart-fixer/category-inference';
+import { applySmartFixerToCollection } from '../ai-smart-fixer/smart-fixer';
 
 const VALID_LON = (v: number): boolean => v >= -180 && v <= 180;
 const VALID_LAT = (v: number): boolean => v >= -90 && v <= 90;
@@ -100,9 +103,17 @@ export function validateFeatureCollection(raw: unknown): ImportResult {
       return;
     }
 
-    const [lon, lat] = coords as number[];
+    // ── Smart Fixer: attempt coordinate repair BEFORE range validation ──
+    let [lon, lat] = coords as number[];
+    let coordsRepaired = false;
+    const repairResult = repairCoordinates([lon, lat]);
+    if (repairResult.wasRepaired) {
+      [lon, lat] = repairResult.repairedCoords;
+      coordsRepaired = true;
+    }
+
     if (!VALID_LON(lon) || !VALID_LAT(lat)) {
-      errors.push(buildError(index, 'COORDINATES_OUT_OF_RANGE', `Feature[${index}] coords [${lon}, ${lat}] out of WGS84 range`, feat));
+      errors.push(buildError(index, 'COORDINATES_OUT_OF_RANGE', `Feature[${index}] coords [${coords[0]}, ${coords[1]}] out of WGS84 range`, feat));
       return;
     }
 
@@ -118,23 +129,35 @@ export function validateFeatureCollection(raw: unknown): ImportResult {
       return;
     }
 
-    if (typeof props['category'] !== 'string' || props['category'].trim() === '') {
-      errors.push(buildError(index, 'MISSING_CATEGORY', `Feature[${index}] properties.category is missing or not a string`, feat));
-      return;
-    }
+    // ── Smart Fixer: infer category if missing ──
+    const rawCategory = typeof props['category'] === 'string' && props['category'].trim() !== ''
+      ? props['category'].trim()
+      : (inferCategory(props['name'] as string) ?? 'other');
 
     imported.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lon, lat] },
-      properties: props as { name: string; category: string; [k: string]: string | number | boolean | null },
+      properties: {
+        ...(props as { name: string; [k: string]: string | number | boolean | null }),
+        category: rawCategory,
+      },
       id: (f['id'] as string | number | undefined) ?? `poi-${index}-${Date.now()}`,
+      ...(coordsRepaired ? { _coordsRepaired: true } : {}),
     });
   });
 
+  // ── Count Smart Fixer actions for summary ──
+  const fixerResult = applySmartFixerToCollection(imported);
+
+  const fixerSuffix =
+    fixerResult.fixedCount.categories > 0 || fixerResult.fixedCount.coordinates > 0
+      ? ` · IA: ${fixerResult.fixedCount.categories} categorías inferidas, ${fixerResult.fixedCount.coordinates} coordenadas corregidas`
+      : '';
+
   return {
-    imported,
+    imported: fixerResult.features,
     errors,
     totalProcessed: features.length,
-    summary: buildSummary(imported.length, errors),
+    summary: buildSummary(fixerResult.features.length, errors) + fixerSuffix,
   };
 }
