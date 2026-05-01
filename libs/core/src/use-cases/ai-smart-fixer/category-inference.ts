@@ -19,6 +19,12 @@ const RULES: CategoryRule[] = [
   { patterns: [/church|iglesia|cathedral|catedral|mosque|mezquita/i],  category: 'landmark' },
 ];
 
+/**
+ * Infers a POI category from its name using pattern-based rules.
+ * Rules cover common venue types (cafe, restaurant, hotel, park, museum, etc.).
+ * @param name POI name to classify
+ * @returns Matched category or null (caller typically defaults to 'other')
+ */
 export function inferCategory(name: string): string | null {
   for (const rule of RULES) {
     if (rule.patterns.some((p) => p.test(name))) return rule.category;

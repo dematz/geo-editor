@@ -25,13 +25,11 @@ export default function App() {
     setShowForm(true);
   });
 
-  // Restore from localStorage on mount
-  useEffect(() => { restore(); }, []); // eslint-disable-line
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- restore is intentionally called once on mount
+  useEffect(() => { restore(); }, []);
 
-  // Sync map with store
   useEffect(() => { updateData(collection); }, [collection, updateData]);
 
-  // Highlight selected POI
   useEffect(() => { highlightPoi(selectedId); }, [selectedId, highlightPoi]);
 
   // ── Handlers ────────────────────────────────────────

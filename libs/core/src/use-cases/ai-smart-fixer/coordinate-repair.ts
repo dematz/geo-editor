@@ -1,6 +1,3 @@
-// Detects and fixes swapped Lat/Lon coordinates
-// Heuristic: if |a| <= 90 and |b| > 90, coords are [lat, lon] — swap them
-
 const VALID_LON = (v: number): boolean => v >= -180 && v <= 180;
 const VALID_LAT = (v: number): boolean => v >= -90 && v <= 90;
 
@@ -10,6 +7,13 @@ export interface CoordRepairResult {
   readonly repairedCoords: [number, number];
 }
 
+/**
+ * Detects and swaps inverted [lat, lon] coordinates to correct [lon, lat] order.
+ * Only repairs unambiguous cases where one value fits only the latitude range (-90..90)
+ * and the other exceeds it. Ambiguous coordinates (both fit lat range) are left as-is.
+ * @param coords [lon, lat] or [lat, lon] coordinate pair
+ * @returns Repair result with wasRepaired flag and repairedCoords (may equal originalCoords if no swap needed)
+ */
 export function repairCoordinates(coords: [number, number]): CoordRepairResult {
   const [a, b] = coords;
 
@@ -24,12 +28,11 @@ export function repairCoordinates(coords: [number, number]): CoordRepairResult {
   const bIsLatOnly = VALID_LAT(b) && !VALID_LAT(a);   // a > 90 or a < -90 → must be lon
 
   if (aIsLatOnly) {
-    // a looks like lat, b looks like lon → swap
     return { wasRepaired: true, originalCoords: coords, repairedCoords: [b, a] };
   }
 
   if (bIsLatOnly) {
-    // already correct: b is lat, a is lon — but this shouldn't reach here normally
+    // [a, b] = [lon, lat] — already correct GeoJSON order, no swap needed
     return { wasRepaired: false, originalCoords: coords, repairedCoords: coords };
   }
 

@@ -50,7 +50,6 @@ export function Toolbar({ onImportDone }: ToolbarProps) {
         💾 Exportar GeoJSON
       </button>
 
-      {/* Undo / Redo */}
       <button className="btn btn-secondary" onClick={undo} disabled={!canUndo()} title="Deshacer (Ctrl+Z)">
         ↩ Deshacer
       </button>

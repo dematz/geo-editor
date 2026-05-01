@@ -21,6 +21,14 @@ const LAYER_ID         = 'pois-layer';
 const CLUSTER_ID       = 'pois-cluster';
 const CLUSTER_COUNT_ID = 'pois-cluster-count';
 
+/**
+ * Initializes MapLibre GL with OSM raster tiles, POI clustering, and highlight support.
+ * Uses a stable ref pattern (onClickRef) to avoid stale closures in event listeners.
+ * Initializes once per mount and cleans up on unmount. Snaps click coordinates to 4-decimal grid.
+ * @param containerRef DOM element to mount the map into
+ * @param onMapClick Callback fired when a blank area is clicked (receives snapped coordinates)
+ * @returns Object with methods to update data, fly to POI, and highlight a POI by ID
+ */
 export function useMapLibre(
   containerRef: React.RefObject<HTMLDivElement | null>,
   onMapClick: (coords: { lng: number; lat: number }) => void
@@ -64,7 +72,8 @@ export function useMapLibre(
       map.remove();
       styleLoaded.current = false;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onMapClick is accessed via onClickRef, stable ref avoids stale closures
+  }, []);
 
   const updateData = useCallback((collection: PoiFeatureCollection) => {
     if (!styleLoaded.current || !mapRef.current) return;

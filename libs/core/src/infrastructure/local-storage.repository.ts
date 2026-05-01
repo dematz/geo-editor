@@ -1,5 +1,4 @@
 import type { IPoiRepository, PoiFeatureCollection } from '../domain';
-//import { emptyCollection } from '../use-cases';
 
 export class LocalStoragePoiRepository implements IPoiRepository {
   private readonly STORAGE_KEY = 'poi_editor_state';

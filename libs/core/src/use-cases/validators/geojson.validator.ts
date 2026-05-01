@@ -50,6 +50,13 @@ function buildSummary(imported: number, errors: ValidationError[]): string {
   return `Importadas ${imported} / Descartadas ${errors.length} (${details})`;
 }
 
+/**
+ * Validates a GeoJSON FeatureCollection and applies smart fixes before full validation.
+ * Repairs swapped coordinates and infers missing categories using pattern matching.
+ * Smart Fixer runs before coordinate range validation so repairs are included in the final result.
+ * @param raw Unknown input to validate as a GeoJSON FeatureCollection
+ * @returns ImportResult with imported (fixed) features, validation errors, and summary
+ */
 export function validateFeatureCollection(raw: unknown): ImportResult {
   const errors: ValidationError[] = [];
   const imported: PoiFeature[] = [];

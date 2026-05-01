@@ -20,7 +20,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private readonly mapService = inject(MapService);
   private readonly poiService = inject(PoiService);
 
-  // ← emite las coordenadas al componente padre
   readonly mapClick = output<LngLat>();
 
   ngAfterViewInit(): void {
