@@ -8,7 +8,7 @@ interface ToolbarProps {
 }
 
 export function Toolbar({ onImportDone }: ToolbarProps) {
-  const { collection, loadCollection, clearAll } = usePoiStore();
+  const { collection, loadCollection, clearAll, undo, redo, canUndo, canRedo } = usePoiStore();
   const { importGeoJson, exportGeoJson } = useFileIo();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -18,11 +18,7 @@ export function Toolbar({ onImportDone }: ToolbarProps) {
     try {
       const result = await importGeoJson(file);
       if (result.imported.length > 0) {
-        const existing = collection.features;
-        loadCollection({
-          type: 'FeatureCollection',
-          features: [...existing, ...result.imported],
-        });
+        loadCollection({ type: 'FeatureCollection', features: [...collection().features, ...result.imported] });
       }
       onImportDone(result);
     } catch (err) {
@@ -50,9 +46,18 @@ export function Toolbar({ onImportDone }: ToolbarProps) {
         onChange={handleFileChange}
         style={{ display: 'none' }}
       />
-      <button className="btn btn-secondary" onClick={() => exportGeoJson(collection)}>
+      <button className="btn btn-secondary" onClick={() => exportGeoJson(collection())}>
         💾 Exportar GeoJSON
       </button>
+
+      {/* Undo / Redo */}
+      <button className="btn btn-secondary" onClick={undo} disabled={!canUndo()} title="Deshacer (Ctrl+Z)">
+        ↩ Deshacer
+      </button>
+      <button className="btn btn-secondary" onClick={redo} disabled={!canRedo()} title="Rehacer (Ctrl+Y)">
+        ↪ Rehacer
+      </button>
+
       <button className="btn btn-danger" onClick={handleClear}>
         🗑 Limpiar todo
       </button>

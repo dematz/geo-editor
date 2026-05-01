@@ -32,7 +32,7 @@ export function PoiList({ onEditRequest, onFlyTo }: PoiListProps) {
   return (
     <div className="poi-list">
       <div className="poi-list__header">
-        <h3>POIs <span className="badge">{collection.features.length}</span></h3>
+        <h3>POIs <span className="badge">{collection().features.length}</span></h3>
         <input
           className="search-input"
           type="text"
@@ -44,7 +44,7 @@ export function PoiList({ onEditRequest, onFlyTo }: PoiListProps) {
 
       {visible.length === 0 && (
         <p className="poi-list__empty">
-          {collection.features.length === 0
+          {collection().features.length === 0
             ? 'No hay POIs. Haz clic en el mapa para agregar.'
             : `Sin resultados para "${query}".`}
         </p>
