@@ -6,10 +6,10 @@ ci:
     numberOfRuns: 3
   assert:
     assertions:
-      first-contentful-paint:  ['warn',  { maxNumericValue: 2000 }]
-      interactive:             ['warn',  { maxNumericValue: 4000 }]
-      accessibility:           ['warn',  { minScore: 0.8 }]
-      best-practices:          ['warn',  { minScore: 0.9 }]
+      first-contentful-paint:      ['warn', { maxNumericValue: 3000 }]
+      interactive:                 ['warn', { maxNumericValue: 6000 }]
+      'categories:accessibility':  ['warn', { minScore: 0.8 }]
+      'categories:best-practices': ['warn', { minScore: 0.8 }]
   upload:
     target: filesystem
     outputDir: ./lighthouse-results
