@@ -51,4 +51,5 @@ htmlcov/
 
 # ── Lighthouse & Tools ──────────────────────────────────────
 lighthouse-results/
+.lighthouseci/
 .pnpm-debug.log
