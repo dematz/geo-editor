@@ -1,0 +1,20 @@
+{
+  "name": "@geo-editor/tokens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Design tokens CSS-first para geo-editor. Zero JS, zero framework.",
+  "type": "module",
+  "exports": {
+    ".":             { "import": "./src/index.css"              },
+    "./index.css":   { "import": "./src/index.css"              },
+    "./colors":      { "import": "./src/tokens/colors.css"      },
+    "./typography":  { "import": "./src/tokens/typography.css"  },
+    "./spacing":     { "import": "./src/tokens/spacing.css"     },
+    "./animations":  { "import": "./src/tokens/animations.css"  },
+    "./reset":       { "import": "./src/styles/reset.css"       },
+    "./utilities":   { "import": "./src/styles/utilities.css"   },
+    "./maplibre":    { "import": "./src/styles/maplibre.css"    }
+  },
+  "files": ["src"],
+  "sideEffects": ["**/*.css"]
+}

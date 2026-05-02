@@ -1,0 +1,130 @@
+/**
+ * @geo-editor/tokens — colors.css
+ *
+ * Paleta completa en oklch() para uniformidad perceptual.
+ * Fuente de verdad extraída del diseño Lovable (point-joy-lab).
+ *
+ * REGLAS DE USO:
+ *  - Nunca usar valores hardcodeados en apps o componentes.
+ *  - Siempre referenciar via var(--ds-*).
+ *  - Dark mode: agregar clase .dark al <html>.
+ */
+
+:root {
+  /* ── Superficie base ──────────────────────────────────── */
+  --ds-background:          oklch(0.985 0.002 250);
+  --ds-foreground:          oklch(0.18  0.02  255);
+
+  --ds-surface:             oklch(1     0     0);
+  --ds-surface-fg:          oklch(0.18  0.02  255);
+
+  --ds-popover:             oklch(1     0     0);
+  --ds-popover-fg:          oklch(0.18  0.02  255);
+
+  /* ── Primary — azul cartográfico ──────────────────────── */
+  --ds-primary:             oklch(0.52  0.17  255);
+  --ds-primary-hover:       oklch(0.47  0.17  255);
+  --ds-primary-active:      oklch(0.43  0.17  255);
+  --ds-primary-fg:          oklch(0.99  0     0);
+
+  /* ── Secondary ────────────────────────────────────────── */
+  --ds-secondary:           oklch(0.96  0.005 250);
+  --ds-secondary-hover:     oklch(0.93  0.006 250);
+  --ds-secondary-fg:        oklch(0.25  0.02  255);
+
+  /* ── Muted ────────────────────────────────────────────── */
+  --ds-muted:               oklch(0.965 0.004 250);
+  --ds-muted-fg:            oklch(0.52  0.015 255);
+
+  /* ── Accent ───────────────────────────────────────────── */
+  --ds-accent:              oklch(0.95  0.015 255);
+  --ds-accent-fg:           oklch(0.25  0.05  255);
+
+  /* ── Semánticos ───────────────────────────────────────── */
+  --ds-destructive:         oklch(0.58  0.22  27);
+  --ds-destructive-hover:   oklch(0.53  0.22  27);
+  --ds-destructive-fg:      oklch(0.99  0     0);
+
+  --ds-success:             oklch(0.62  0.16  152);
+  --ds-success-fg:          oklch(0.99  0     0);
+
+  --ds-warning:             oklch(0.78  0.17  75);
+  --ds-warning-fg:          oklch(0.2   0.02  75);
+
+  /* ── Borde / Input / Ring ─────────────────────────────── */
+  --ds-border:              oklch(0.92  0.006 250);
+  --ds-input:               oklch(0.92  0.006 250);
+  --ds-input-focus:         oklch(0.52  0.17  255);
+  --ds-ring:                oklch(0.52  0.17  255 / 40%);
+
+  /* ── Topbar (oscuro) ──────────────────────────────────── */
+  --ds-topbar:              oklch(0.22  0.025 258);
+  --ds-topbar-fg:           oklch(0.97  0.005 250);
+  --ds-topbar-border:       oklch(0.3   0.03  258);
+  --ds-topbar-input-bg:     oklch(1     0     0   / 5%);
+  --ds-topbar-input-border: oklch(1     0     0   / 10%);
+  --ds-topbar-btn-bg:       oklch(1     0     0   / 10%);
+  --ds-topbar-btn-hover:    oklch(1     0     0   / 15%);
+  --ds-topbar-avatar-border:oklch(1     0     0   / 15%);
+
+  /* ── Sidebar ──────────────────────────────────────────── */
+  --ds-sidebar:             oklch(0.99  0.002 250);
+  --ds-sidebar-fg:          oklch(0.18  0.02  255);
+  --ds-sidebar-border:      oklch(0.92  0.006 250);
+  --ds-sidebar-accent:      oklch(0.96  0.005 250);
+  --ds-sidebar-accent-fg:   oklch(0.25  0.02  255);
+
+  /* ── Categorías POI ───────────────────────────────────── */
+  --ds-cat-restaurant:      oklch(0.65  0.21  35);   /* naranja/rojo cálido */
+  --ds-cat-hotel:           oklch(0.58  0.18  285);  /* índigo              */
+  --ds-cat-park:            oklch(0.62  0.16  152);  /* verde               */
+  --ds-cat-hospital:        oklch(0.62  0.21  12);   /* rojo                */
+  --ds-cat-custom:          oklch(0.55  0.04  255);  /* slate               */
+
+  /* ── Overlay / Backdrop ───────────────────────────────── */
+  --ds-overlay:             oklch(0.2   0.02  258 / 40%);
+}
+
+/* ── Dark mode ────────────────────────────────────────────── */
+.dark {
+  --ds-background:          oklch(0.16  0.02  258);
+  --ds-foreground:          oklch(0.97  0.005 250);
+
+  --ds-surface:             oklch(0.22  0.025 258);
+  --ds-surface-fg:          oklch(0.97  0.005 250);
+
+  --ds-popover:             oklch(0.22  0.025 258);
+  --ds-popover-fg:          oklch(0.97  0.005 250);
+
+  --ds-primary:             oklch(0.65  0.18  255);
+  --ds-primary-hover:       oklch(0.60  0.18  255);
+  --ds-primary-active:      oklch(0.55  0.18  255);
+  --ds-primary-fg:          oklch(0.15  0.02  258);
+
+  --ds-secondary:           oklch(0.28  0.03  258);
+  --ds-secondary-hover:     oklch(0.32  0.03  258);
+  --ds-secondary-fg:        oklch(0.97  0.005 250);
+
+  --ds-muted:               oklch(0.26  0.025 258);
+  --ds-muted-fg:            oklch(0.7   0.02  255);
+
+  --ds-accent:              oklch(0.3   0.04  258);
+  --ds-accent-fg:           oklch(0.97  0.005 250);
+
+  --ds-destructive:         oklch(0.65  0.2   27);
+  --ds-destructive-hover:   oklch(0.60  0.2   27);
+  --ds-destructive-fg:      oklch(0.99  0     0);
+
+  --ds-border:              oklch(1     0     0   / 10%);
+  --ds-input:               oklch(1     0     0   / 12%);
+  --ds-input-focus:         oklch(0.65  0.18  255);
+  --ds-ring:                oklch(0.65  0.18  255 / 40%);
+
+  --ds-sidebar:             oklch(0.19  0.022 258);
+  --ds-sidebar-fg:          oklch(0.97  0.005 250);
+  --ds-sidebar-border:      oklch(1     0     0   / 8%);
+  --ds-sidebar-accent:      oklch(0.28  0.03  258);
+  --ds-sidebar-accent-fg:   oklch(0.97  0.005 250);
+
+  --ds-overlay:             oklch(0.1   0.02  258 / 60%);
+}

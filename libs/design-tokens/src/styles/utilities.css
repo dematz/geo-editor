@@ -1,0 +1,131 @@
+/**
+ * @geo-editor/tokens — utilities.css
+ *
+ * Utilidades de layout puras — sin estado, sin interactividad.
+ * NO incluye clases de componentes (.ds-button, .ds-input).
+ * Esas viven en cada lib de framework.
+ *
+ * CRITERIO de inclusión:
+ *   ✅ Layout estructural (flex, grid, positioning)
+ *   ✅ Visibilidad accesible (sr-only)
+ *   ❌ Estilos de componentes con estado
+ *   ❌ Variantes de color
+ */
+
+/* ── App shell ────────────────────────────────────────────── */
+.ds-app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--ds-background);
+}
+
+.ds-app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;   /* evita overflow en Firefox */
+  overflow: hidden;
+}
+
+.ds-map-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Sidebar transition ───────────────────────────────────── */
+.ds-sidebar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width var(--ds-duration-normal) var(--ds-ease-out);
+  width: var(--ds-sidebar-width);
+  background: var(--ds-sidebar);
+  border-right: 1px solid var(--ds-sidebar-border);
+  z-index: var(--ds-z-sidebar);
+}
+
+.ds-sidebar-wrapper[aria-expanded="false"] {
+  width: 0;
+}
+
+/* ── Accesibilidad ────────────────────────────────────────── */
+.ds-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ── Tipografía de sección ────────────────────────────────── */
+.ds-section-label {
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-font-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--ds-tracking-wide);
+  color: var(--ds-muted-fg);
+}
+
+/* ── Coordenadas tabulares ────────────────────────────────── */
+.ds-coords {
+  font-size: var(--ds-text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--ds-muted-fg);
+  font-feature-settings: var(--ds-font-feature-tabular);
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.ds-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ds-space-8) var(--ds-space-4);
+  text-align: center;
+  font-size: var(--ds-text-xs);
+  color: var(--ds-muted-fg);
+  line-height: var(--ds-leading-relaxed);
+}
+
+/* ── Overlay modal ────────────────────────────────────────── */
+.ds-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--ds-overlay);
+  z-index: var(--ds-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ds-space-4);
+  animation: ds-fade-in var(--ds-duration-fast) var(--ds-ease-default);
+}
+
+.ds-modal-content {
+  width: 100%;
+  max-width: var(--ds-modal-max-width);
+  background: var(--ds-surface);
+  border-radius: var(--ds-radius-xl);
+  box-shadow: var(--ds-shadow-modal);
+  animation: ds-scale-in var(--ds-duration-normal) var(--ds-ease-out);
+  overflow: hidden;
+}
+
+/* ── Spinner ──────────────────────────────────────────────── */
+.ds-spinner {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: var(--ds-radius-full);
+  animation: ds-spin var(--ds-duration-slow) linear infinite;
+  flex-shrink: 0;
+}

@@ -1,0 +1,94 @@
+/**
+ * @geo-editor/tokens — reset.css
+ *
+ * Reset mínimo. Sin opiniones de layout.
+ * Compatible con Angular y React sin conflictos.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-color: var(--ds-border);
+  outline-color: var(--ds-ring);
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--ds-background);
+  color: var(--ds-foreground);
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-text-base);
+  line-height: var(--ds-leading-normal);
+  font-feature-settings: var(--ds-font-feature-default);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  letter-spacing: var(--ds-tracking-tight);
+  line-height: var(--ds-leading-tight);
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--ds-primary);
+  text-decoration: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* ── Scrollbar sutil (webkit) ─────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ds-border);
+  border-radius: var(--ds-radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ds-muted-fg);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ds-border) transparent;
+}

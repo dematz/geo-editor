@@ -1,0 +1,96 @@
+/**
+ * @geo-editor/tokens — maplibre.css
+ *
+ * Overrides de MapLibre GL para look cartográfico consistente.
+ * Reemplaza los estilos inline hardcodeados del componente original.
+ * Solo afecta clases .maplibregl-* — sin conflictos con UI.
+ */
+
+/* ── Atribución ───────────────────────────────────────────── */
+.maplibregl-ctrl-attrib {
+  background: oklch(1 0 0 / 0.75) !important;
+  font-size: var(--ds-text-2xs) !important;
+  font-family: var(--ds-font-sans) !important;
+  border-radius: var(--ds-radius-sm) !important;
+}
+
+/* ── Popup ────────────────────────────────────────────────── */
+.maplibregl-popup-content {
+  border-radius: var(--ds-radius-md) !important;
+  box-shadow: var(--ds-shadow-card) !important;
+  padding: var(--ds-space-3) var(--ds-space-3-5) !important;
+  font-family: var(--ds-font-sans) !important;
+  font-size: var(--ds-text-sm) !important;
+  color: var(--ds-foreground) !important;
+  background: var(--ds-surface) !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: var(--ds-surface) !important;
+}
+
+.maplibregl-popup-close-button {
+  font-size: var(--ds-text-md) !important;
+  color: var(--ds-muted-fg) !important;
+  line-height: 1 !important;
+  padding: var(--ds-space-1) !important;
+}
+
+.maplibregl-popup-close-button:hover {
+  color: var(--ds-foreground) !important;
+  background: var(--ds-accent) !important;
+}
+
+/* ── Navigation controls ──────────────────────────────────── */
+.maplibregl-ctrl-group {
+  border-radius: var(--ds-radius-md) !important;
+  box-shadow: var(--ds-shadow-card) !important;
+  overflow: hidden;
+}
+
+.maplibregl-ctrl-group button {
+  background: var(--ds-surface) !important;
+  color: var(--ds-foreground) !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background: var(--ds-accent) !important;
+}
+
+/* ── Marker base (estilos del marcador circular custom) ────── */
+.ds-map-marker {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--ds-radius-full);
+  border: 2px solid var(--ds-surface);
+  box-shadow: 0 2px 6px oklch(0.2 0.02 250 / 0.35);
+  cursor: pointer;
+  transition: transform var(--ds-duration-fast) var(--ds-ease-default);
+}
+
+.ds-map-marker:hover {
+  transform: scale(1.15);
+}
+
+.ds-map-marker:focus-visible {
+  outline: 2px solid var(--ds-ring);
+  outline-offset: 2px;
+}
+
+/* ── Counter badge (top-right del mapa) ───────────────────── */
+.ds-map-counter {
+  position: absolute;
+  top: var(--ds-space-4);
+  right: var(--ds-space-4);
+  z-index: var(--ds-z-raised);
+  padding: var(--ds-space-1-5) var(--ds-space-3);
+  border-radius: var(--ds-radius-md);
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-font-medium);
+  background: oklch(1 0 0 / 90%);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--ds-border);
+  box-shadow: var(--ds-shadow-card);
+  color: var(--ds-foreground);
+  font-variant-numeric: tabular-nums;
+}
