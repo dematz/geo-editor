@@ -25,6 +25,11 @@ const CLUSTER_COUNT_ID = 'pois-cluster-count';
  * Initializes MapLibre GL with OSM raster tiles, POI clustering, and highlight support.
  * Uses a stable ref pattern (onClickRef) to avoid stale closures in event listeners.
  * Initializes once per mount and cleans up on unmount. Snaps click coordinates to 4-decimal grid.
+ *
+ * FIX: Added pendingDataRef to buffer calls to updateData() that arrive before map.on('load')
+ * fires. On load, the buffered collection is flushed to the GeoJSON source so markers render
+ * correctly even when the store is restored before the map is ready.
+ *
  * @param containerRef DOM element to mount the map into
  * @param onMapClick Callback fired when a blank area is clicked (receives snapped coordinates)
  * @returns Object with methods to update data, fly to POI, and highlight a POI by ID
@@ -33,9 +38,11 @@ export function useMapLibre(
   containerRef: React.RefObject<HTMLDivElement | null>,
   onMapClick: (coords: { lng: number; lat: number }) => void
 ) {
-  const mapRef      = useRef<Map | null>(null);
-  const styleLoaded = useRef(false);
-  const onClickRef  = useRef(onMapClick);
+  const mapRef          = useRef<Map | null>(null);
+  const styleLoaded     = useRef(false);
+  const onClickRef      = useRef(onMapClick);
+  // ── FIX: buffer data that arrives before the map 'load' event fires ──
+  const pendingDataRef  = useRef<PoiFeatureCollection | null>(null);
 
   onClickRef.current = onMapClick;
 
@@ -54,6 +61,13 @@ export function useMapLibre(
     map.on('load', () => {
       setupLayers(map);
       styleLoaded.current = true;
+
+      // ── FIX: flush any data that arrived before the map was ready ──
+      if (pendingDataRef.current) {
+        const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+        source?.setData(pendingDataRef.current as GeoJSON.FeatureCollection);
+        pendingDataRef.current = null;
+      }
     });
 
     map.on('click', (e) => {
@@ -70,13 +84,18 @@ export function useMapLibre(
 
     return () => {
       map.remove();
-      styleLoaded.current = false;
+      styleLoaded.current  = false;
+      pendingDataRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- onMapClick is accessed via onClickRef, stable ref avoids stale closures
   }, []);
 
   const updateData = useCallback((collection: PoiFeatureCollection) => {
-    if (!styleLoaded.current || !mapRef.current) return;
+    if (!styleLoaded.current || !mapRef.current) {
+      // ── FIX: buffer data until the map 'load' event fires ──
+      pendingDataRef.current = collection;
+      return;
+    }
     const source = mapRef.current.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
     source?.setData(collection as GeoJSON.FeatureCollection);
   }, []);

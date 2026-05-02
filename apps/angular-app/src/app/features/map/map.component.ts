@@ -6,6 +6,18 @@ import { MapService } from '../../core/services/map.service';
 import { PoiService } from '../../core/services/poi.service';
 import type { LngLat } from '@geo-editor/core';
 
+/**
+ * FIX: effect() calls moved from ngAfterViewInit() to the constructor.
+ *
+ * Angular 18 requires effect() to run inside an injection context (constructor
+ * or field initializer). Calling effect() in ngAfterViewInit() silently fails —
+ * the effect is never registered and updateData/highlightPoi are never called
+ * reactively, so markers never appear after the store is restored.
+ *
+ * Moving the effects to the constructor restores the injection context.
+ * MapService.updateData() now also buffers calls that arrive before the map
+ * 'load' event fires (see map.service.ts), so the ordering is safe.
+ */
 @Component({
   selector: 'app-map',
   standalone: true,
@@ -22,17 +34,20 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   readonly mapClick = output<LngLat>();
 
-  ngAfterViewInit(): void {
-    this.mapService.initMap(this.mapContainer.nativeElement, (coords) => {
-      this.mapClick.emit({ lng: coords.lng, lat: coords.lat });
-    });
-
+  constructor() {
+    // ── FIX: effects must be registered inside the injection context ──
     effect(() => {
       this.mapService.updateData(this.poiService.collection());
     });
 
     effect(() => {
       this.mapService.highlightPoi(this.poiService.selectedId());
+    });
+  }
+
+  ngAfterViewInit(): void {
+    this.mapService.initMap(this.mapContainer.nativeElement, (coords) => {
+      this.mapClick.emit({ lng: coords.lng, lat: coords.lat });
     });
   }
 

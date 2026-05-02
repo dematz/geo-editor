@@ -13,15 +13,26 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 export default function App() {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const { restore, filteredFeatures, collection, selectedId, loadCollection, selectPoint, removePoint, setFilter, undo, redo, canUndo: getCanUndo, canRedo: getCanRedo, clearAll, addPoint, updatePoint, features } = usePoiStore();
+  const {
+    restore, filteredFeatures, collection, selectedId,
+    loadCollection, selectPoint, removePoint, setFilter,
+    undo, redo, canUndo: getCanUndo, canRedo: getCanRedo,
+    clearAll, addPoint, updatePoint, features,
+  } = usePoiStore();
+
+  // ── FIX: subscribe to `history` (changes on every mutation) instead of
+  //    `collection` (a stable function reference that never triggers re-renders).
+  //    Without this, the useEffect below ran only once at mount and never
+  //    re-fired when POIs were added, updated, or removed.
+  const history = usePoiStore(s => s.history);
 
   // ── UI state ────────────────────────────────────────
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [search, setSearch] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [pendingCoords, setPendingCoords] = useState<LngLat | null>(null);
-  const [editingPoi, setEditingPoi] = useState<PoiFeature | null>(null);
-  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [search, setSearch]                     = useState('');
+  const [showForm, setShowForm]                 = useState(false);
+  const [pendingCoords, setPendingCoords]       = useState<LngLat | null>(null);
+  const [editingPoi, setEditingPoi]             = useState<PoiFeature | null>(null);
+  const [importResult, setImportResult]         = useState<ImportResult | null>(null);
 
   // ── Map ─────────────────────────────────────────────
   const { updateData, flyTo, highlightPoi } = useMapLibre(mapContainer, (coords) => {
@@ -35,7 +46,8 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { restore(); }, []);
 
-  useEffect(() => { updateData(collection()); }, [collection, updateData]);
+  // ── FIX: depend on `history` so this effect re-runs on every store mutation ──
+  useEffect(() => { updateData(collection()); }, [history, updateData]);
 
   useEffect(() => { highlightPoi(selectedId); }, [selectedId, highlightPoi]);
 
@@ -64,13 +76,8 @@ export default function App() {
     exportGeoJson(collection());
   }
 
-  function handleUndo() {
-    undo();
-  }
-
-  function handleRedo() {
-    redo();
-  }
+  function handleUndo() { undo(); }
+  function handleRedo() { redo(); }
 
   async function handleClearAll() {
     if (confirm('¿Borrar todos los puntos y reiniciar?')) {
@@ -127,34 +134,34 @@ export default function App() {
   }
 
   // ── Derived state ───────────────────────────────────
-  const allPois = filteredFeatures();
-  const mappedPois = allPois.map(f => ({
-    id: String(f.id),
-    name: f.properties.name,
+  const allPois     = filteredFeatures();
+  const mappedPois  = allPois.map(f => ({
+    id:       String(f.id),
+    name:     f.properties.name,
     category: toCategoryId(f.properties.category),
-    icon: CATEGORY_ICONS[toCategoryId(f.properties.category)],
-    lat: f.geometry.coordinates[1],
-    lng: f.geometry.coordinates[0],
+    icon:     CATEGORY_ICONS[toCategoryId(f.properties.category)],
+    lat:      f.geometry.coordinates[1],
+    lng:      f.geometry.coordinates[0],
     selected: selectedId === f.id,
   }));
 
   const modalInitialData = editingPoi
     ? {
-      id: String(editingPoi.id),
-      name: editingPoi.properties.name,
-      category: toCategoryId(editingPoi.properties.category),
-      lat: editingPoi.geometry.coordinates[1].toString(),
-      lng: editingPoi.geometry.coordinates[0].toString(),
-      description: editingPoi.properties.description ?? '',
-    }
+        id:          String(editingPoi.id),
+        name:        editingPoi.properties.name,
+        category:    toCategoryId(editingPoi.properties.category),
+        lat:         editingPoi.geometry.coordinates[1].toString(),
+        lng:         editingPoi.geometry.coordinates[0].toString(),
+        description: editingPoi.properties.description ?? '',
+      }
     : pendingCoords
       ? {
-        name: '',
-        category: 'custom' as const,
-        lat: pendingCoords.lat.toString(),
-        lng: pendingCoords.lng.toString(),
-        description: '',
-      }
+          name:        '',
+          category:    'custom' as const,
+          lat:         pendingCoords.lat.toString(),
+          lng:         pendingCoords.lng.toString(),
+          description: '',
+        }
       : undefined;
 
   return (

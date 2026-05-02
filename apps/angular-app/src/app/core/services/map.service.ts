@@ -22,6 +22,9 @@ export class MapService {
   private readonly zone = inject(NgZone);
   private styleLoaded = false;
 
+  // ── FIX: buffer collection that arrives before map 'load' fires ──
+  private pendingCollection: PoiFeatureCollection | null = null;
+
   private readonly SOURCE_ID        = 'pois-source';
   private readonly LAYER_ID         = 'pois-layer';
   private readonly CLUSTER_ID       = 'pois-cluster';
@@ -42,6 +45,13 @@ export class MapService {
       this.map.on('load', () => {
         this.setupSourceAndLayers();
         this.styleLoaded = true;
+
+        // ── FIX: flush data that arrived before the map was ready ──
+        if (this.pendingCollection) {
+          const source = this.map.getSource(this.SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+          source?.setData(this.pendingCollection as GeoJSON.FeatureCollection);
+          this.pendingCollection = null;
+        }
       });
 
       this.map.on('click', (e: MapMouseEvent) => {
@@ -65,7 +75,11 @@ export class MapService {
   }
 
   updateData(collection: PoiFeatureCollection): void {
-    if (!this.styleLoaded) return;
+    if (!this.styleLoaded) {
+      // ── FIX: buffer data until the map 'load' event fires ──
+      this.pendingCollection = collection;
+      return;
+    }
     const source = this.map.getSource(this.SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
     if (source) {
       source.setData(collection as GeoJSON.FeatureCollection);
@@ -88,6 +102,8 @@ export class MapService {
 
   destroy(): void {
     this.map?.remove();
+    this.styleLoaded = false;
+    this.pendingCollection = null;
   }
 
   private setupSourceAndLayers(): void {
