@@ -1,0 +1,27 @@
+{
+  "name": "@geo-editor/ui-angular",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": { "import": "./src/index.ts" }
+  },
+  "peerDependencies": {
+    "@angular/core": ">=18",
+    "@angular/common": ">=18",
+    "@angular/forms": ">=18"
+  },
+  "devDependencies": {
+    "@angular/animations": "^18.0.0",
+    "@angular/common": "^18.0.0",
+    "@angular/core": "^18.0.0",
+    "@angular/forms": "^18.0.0",
+    "@angular/platform-browser": "^18.0.0",
+    "@geo-editor/tokens": "workspace:*",
+    "@types/node": "^24.12.2",
+    "tslib": "^2.0.0",
+    "typescript": "~6.0.2"
+  }
+}

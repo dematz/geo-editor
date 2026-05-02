@@ -1,0 +1,74 @@
+.wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-1);
+}
+
+.select {
+  display: flex;
+  height: 2.25rem;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: var(--ds-radius-md);
+  border: 1px solid var(--ds-input);
+  background: transparent;
+  padding: 0 var(--ds-space-8) 0 var(--ds-space-3);
+  font-family: var(--ds-font-sans);
+  font-size: var(--ds-text-base);
+  color: var(--ds-foreground) !important;
+  cursor: pointer;
+  outline: none;
+  box-shadow: var(--ds-shadow-card);
+  transition:
+    border-color var(--ds-duration-fast) var(--ds-ease-default),
+    box-shadow var(--ds-duration-fast) var(--ds-ease-default);
+}
+
+.select.withDot {
+  padding-left: calc(var(--ds-space-3) + 10px + var(--ds-space-2));
+}
+
+.select:focus-visible {
+  border-color: var(--ds-input-focus);
+  box-shadow: var(--ds-shadow-focus);
+}
+
+.select:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.select.hasError {
+  border-color: var(--ds-destructive);
+}
+
+.colorDot {
+  position: absolute;
+  left: var(--ds-space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: var(--ds-radius-full);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.chevron {
+  position: absolute;
+  right: var(--ds-space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--ds-muted-fg);
+  pointer-events: none;
+}
+
+.errorMessage {
+  font-size: var(--ds-text-xs);
+  color: var(--ds-destructive);
+  margin: 0;
+}

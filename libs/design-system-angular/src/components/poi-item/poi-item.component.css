@@ -1,0 +1,116 @@
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ds-space-2-5);
+  padding: var(--ds-space-2);
+  border-radius: var(--ds-radius-md);
+  cursor: pointer;
+  transition: background var(--ds-duration-fast) var(--ds-ease-default);
+  outline: none;
+}
+
+.item:hover,
+.item:focus-visible {
+  background: var(--ds-accent);
+}
+
+.item:focus-visible {
+  box-shadow: var(--ds-shadow-focus);
+}
+
+.item.selected {
+  background: var(--ds-accent);
+  border-left: 2px solid var(--ds-primary);
+  padding-left: calc(var(--ds-space-2) - 2px);
+}
+
+/* Show actions on hover/focus */
+.item:hover .actions,
+.item:focus-within .actions {
+  opacity: 1;
+}
+
+.iconBadge {
+  width: var(--ds-icon-md);
+  height: var(--ds-icon-md);
+  border-radius: var(--ds-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: var(--ds-space-0-5);
+}
+
+.icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--ds-text-base);
+  font-weight: var(--ds-font-medium);
+  color: var(--ds-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: var(--ds-leading-tight);
+  margin: 0;
+}
+
+.coords {
+  font-size: var(--ds-text-xs);
+  color: var(--ds-muted-fg);
+  font-variant-numeric: tabular-nums;
+  margin: var(--ds-space-0-5) 0 0 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-0-5);
+  /*opacity: 0;*/
+  transition: opacity var(--ds-duration-fast) var(--ds-ease-default);
+}
+
+.actionBtn {
+  width: var(--ds-icon-md);
+  height: var(--ds-icon-md);
+  border-radius: var(--ds-radius-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ds-muted-fg);
+  transition:
+    background var(--ds-duration-fast) var(--ds-ease-default),
+    color var(--ds-duration-fast) var(--ds-ease-default);
+}
+
+.actionBtn:hover {
+  background: var(--ds-surface);
+}
+
+.actionBtn:focus-visible {
+  box-shadow: var(--ds-shadow-focus);
+  outline: none;
+}
+
+.editBtn:hover {
+  color: var(--ds-foreground);
+}
+
+.deleteBtn:hover {
+  color: var(--ds-destructive);
+}
+
+.actionIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
