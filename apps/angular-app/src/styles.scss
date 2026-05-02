@@ -1,20 +1,26 @@
-/* Global styles */
+/* Global styles — geo-editor Angular app */
+
+/* MapLibre CSS — must come before tokens */
 @import 'maplibre-gl/dist/maplibre-gl.css';
 
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+/*
+ * @geo-editor/tokens is loaded via angular.json styles array
+ * before this file — all --ds-* variables are available here.
+ */
 
 html, body {
-  margin: 0;
-  padding: 0;
   height: 100%;
   overflow: hidden;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-  color: #1e293b;
-  background: #fff;
+  /* Use DS tokens — never hardcode values */
+  font-family:      var(--ds-font-sans);
+  font-size:        var(--ds-text-base);   /* 14px body */
+  line-height:      var(--ds-leading-normal);
+  color:            var(--ds-foreground);
+  background-color: var(--ds-background);
+  font-feature-settings: var(--ds-font-feature-default);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

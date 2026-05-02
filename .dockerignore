@@ -1,7 +1,56 @@
+# Cache & Build outputs (will be rebuilt in Docker)
 .nx/cache
 .nx/workspace-data
-node_modules
+.next
+.angular
+.storybook
 dist
+build
+coverage
+
+# Dependencies (will be installed fresh)
+node_modules
+pnpm-store
+.pnpm-store
 apps/*/node_modules
 apps/*/dist
 libs/*/dist
+libs/*/node_modules
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE & Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# CI/CD configs (not needed in Docker)
+.github
+.gitlab-ci.yml
+.circleci
+.travis.yml
+
+# Development & Test files
+*.test.ts
+*.spec.ts
+*.test.tsx
+*.spec.tsx
+__tests__
+jest.config.js
+karma.conf.js
+.eslintrc*
+.prettierrc

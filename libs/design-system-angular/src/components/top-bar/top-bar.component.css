@@ -77,11 +77,12 @@
 }
 
 /* Actions */
-.actions {
+.topbar .actions {
   display: flex;
   align-items: center;
   gap: var(--ds-space-2);
   flex-shrink: 0;
+  opacity: 1;
 }
 
 .actionsGroup {
@@ -101,6 +102,8 @@
 .actionsGroup ds-button .button {
   color: var(--ds-topbar-fg) !important;
   background: transparent;
+  min-width: auto;
+  padding: var(--ds-space-1);
 }
 
 .actionsGroup ds-button .button:hover:not(:disabled) {

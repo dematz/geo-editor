@@ -39,6 +39,7 @@
               }
             ],
             "styles": [
+              "../../libs/design-tokens/src/index.css",
               "src/styles.scss"
             ],
             "allowedCommonJsDependencies": [

@@ -3,6 +3,7 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  height: 100%;
   background: var(--ds-sidebar);
   color: var(--ds-sidebar-fg);
   border-right: 1px solid var(--ds-sidebar-border);
@@ -44,9 +45,6 @@
   height: 14px;
 }
 
-/* BUG 3 FIX — inner must be flex column with flex:1 (not just height:100%)
-   so that .categories with margin-top:auto actually pushes to the bottom.
-   overflow:hidden was collapsing the available height. */
 .inner {
   display: flex;
   flex-direction: column;
@@ -58,7 +56,6 @@
 .newBtnWrapper {
   padding: var(--ds-space-4);
   border-bottom: 1px solid var(--ds-sidebar-border);
-  flex-shrink: 0;
 }
 
 /* BUG 2 FIX — :host ds-button has no effect with ViewEncapsulation.None.
@@ -79,7 +76,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-shrink: 0;
 }
 
 .sectionLabel {
@@ -97,11 +93,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* BUG 3 FIX — list must flex:1 + min-height:0 to fill available space
-   so categories can push to bottom with margin-top:auto */
 .list {
   flex: 1;
-  min-height: 0;
   overflow-y: auto;
   padding: 0 var(--ds-space-2) var(--ds-space-2);
   scrollbar-width: thin;
@@ -122,11 +115,7 @@
   line-height: var(--ds-leading-relaxed);
 }
 
-/* BUG 3 FIX — flex-shrink:0 prevents categories from being squeezed
-   margin-top:auto works correctly now that .list has flex:1 */
 .categories {
-  flex-shrink: 0;
-  margin-top: auto;
   padding: var(--ds-space-4);
   border-top: 1px solid var(--ds-sidebar-border);
   display: flex;

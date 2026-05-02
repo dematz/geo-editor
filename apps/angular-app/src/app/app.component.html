@@ -1,45 +1,39 @@
-<div class="app-layout">
-
-  <!-- Top toolbar -->
-  <app-toolbar
-    class="app-layout__toolbar"
-    (importDone)="onImportDone($event)"
+<div class="app-shell">
+  <ds-top-bar
+    [search]="search()"
+    (searchChange)="onSearchChange($event)"
+    [canUndo]="poiSvc.canUndo()"
+    [canRedo]="poiSvc.canRedo()"
+    (undo)="onUndo()"
+    (redo)="onRedo()"
+    (clearAll)="onClearAll()"
+    (import)="onImport($event)"
+    (export)="onExport()"
   />
 
-  <!-- Import report banner -->
   <app-import-report
     [result]="importResult()"
     (dismissed)="onImportReportDismissed()"
   />
 
-  <!-- Main content: map + sidebar -->
-  <div class="app-layout__body">
-
-    <!-- Map — ahora emite (mapClick) al padre -->
-    <app-map
-      class="app-layout__map"
-      (mapClick)="onMapClick($event)"
+  <div class="app-body">
+    <ds-sidebar
+      [pois]="mappedPois()"
+      [categories]="SIDEBAR_CATEGORIES"
+      [collapsed]="sidebarCollapsed()"
+      (toggle)="toggleSidebar()"
+      (new)="onNewPoi()"
+      (edit)="onEditById($event)"
+      (delete)="onDeletePoi($event)"
+      (focus)="onFocusPoi($event)"
     />
-
-    <!-- Right sidebar -->
-    <aside class="app-layout__sidebar">
-
-      <!-- POI list -->
-      <app-poi-list
-        (editRequest)="onEditRequest($event)"
-      />
-
-      <!-- POI form (create / edit) -->
-      @if (showForm()) {
-        <app-poi-form
-          [poi]="editingPoi()"
-          [coords]="pendingCoords()"
-          (saved)="onFormSaved($event)"
-          (cancelled)="onFormCancelled()"
-        />
-      }
-
-    </aside>
+    <app-map class="app-map" (mapClick)="onMapClick($event)" />
   </div>
 
+  <ds-poi-form-modal
+    [open]="showForm()"
+    [initialData]="modalInitialData()"
+    (close)="onModalClose()"
+    (save)="onModalSave($event)"
+  />
 </div>

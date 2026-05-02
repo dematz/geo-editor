@@ -22,7 +22,12 @@
     "lib": [
       "ES2022",
       "dom"
-    ]
+    ],
+    "paths": {
+      "@geo-editor/ui-angular": ["../../libs/design-system-angular/src/index.ts"],
+      "@geo-editor/tokens": ["../../libs/design-tokens/src/index.css"],
+      "@geo-editor/core": ["../../libs/core/src/index.ts"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

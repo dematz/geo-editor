@@ -8,14 +8,23 @@ WORKDIR /app
 
 RUN npm install -g pnpm@latest
 
+# Copy workspace manifests first (for dependency resolution)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY nx.json tsconfig.base.json ./
+
+# Copy app and library package.json files (required for pnpm workspace resolution)
 COPY apps/react-app/package.json ./apps/react-app/
 COPY libs/core/package.json ./libs/core/
+COPY libs/design-tokens/package.json ./libs/design-tokens/
+COPY libs/design-system-react/package.json ./libs/design-system-react/
 
 RUN pnpm install --frozen-lockfile
 
-COPY . .
+# Copy source code
+COPY apps/react-app ./apps/react-app
+COPY libs/core ./libs/core
+COPY libs/design-tokens ./libs/design-tokens
+COPY libs/design-system-react ./libs/design-system-react
 
 # Build directly with vite — bypasses Nx cache entirely
 WORKDIR /app/apps/react-app

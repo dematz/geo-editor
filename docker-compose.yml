@@ -2,30 +2,42 @@ version: '3.9'
 
 # ============================================================
 # geo-editor — Docker Compose
-# Builds and runs both Angular and React apps via Nginx
+#
+# Shared Libraries Strategy:
+#   ✓ design-tokens    → Copied in build stage (CSS custom properties)
+#   ✓ ui-react         → Copied in react-app build stage
+#   ✓ ui-angular       → Copied in angular-app build stage
+#   ✓ core             → Compiled & bundled in build stage (immutable runtime)
+#
+# Each app is built independently with all dependencies included.
+# No runtime changes to source code; config via environment variables.
 # ============================================================
 
 services:
   # ── Angular App ─────────────────────────────────────────
+  # Builds design-system-angular + core + design-tokens statically
   angular-client:
     build:
       context: .
       dockerfile: apps/angular-app/Dockerfile
+    container_name: geo-editor-angular
     ports:
       - "${ANGULAR_PORT:-4200}:80"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
-    volumes:
-      - shared-core:/app/libs/core/dist
     networks:
       - geo-net
+    labels:
+      - "com.example.description=Angular POI Editor Client"
 
   # ── React App ───────────────────────────────────────────
+  # Builds design-system-react + core + design-tokens statically
   react-client:
     build:
       context: .
       dockerfile: apps/react-app/Dockerfile
+    container_name: geo-editor-react
     ports:
       - "${REACT_PORT:-3000}:80"
     environment:
@@ -33,10 +45,10 @@ services:
       - VITE_TILE_URL=${VITE_TILE_URL:-https://tile.openstreetmap.org/{z}/{x}/{y}.png}
       - VITE_STORAGE_KEY=${VITE_STORAGE_KEY:-poi_editor_state}
     restart: unless-stopped
-    volumes:
-      - shared-core:/app/libs/core/dist
     networks:
       - geo-net
+    labels:
+      - "com.example.description=React POI Editor Client"
 
   # ── Lighthouse CI (optional) ────────────────────────────
   # lighthouse:
@@ -47,9 +59,6 @@ services:
   #     - ./lighthouse-results:/app/lighthouse-results
   #   networks:
   #     - geo-net
-
-volumes:
-  shared-core:
 
 networks:
   geo-net:
