@@ -1,0 +1,57 @@
+.overlay {
+  position: fixed; inset: 0; background: var(--ds-overlay);
+  z-index: var(--ds-z-modal);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--ds-space-4);
+  animation: ds-fade-in var(--ds-duration-fast) var(--ds-ease-default);
+}
+.modal {
+  width: 100%; max-width: var(--ds-modal-max-width);
+  background: var(--ds-surface); border-radius: var(--ds-radius-xl);
+  box-shadow: var(--ds-shadow-modal); overflow: hidden;
+  animation: ds-scale-in var(--ds-duration-normal) var(--ds-ease-out);
+  display: flex; flex-direction: column;
+}
+
+/* Header */
+.header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: var(--ds-space-6) var(--ds-space-6) var(--ds-space-4);
+  border-bottom: 1px solid var(--ds-border);
+}
+.title {
+  font-size: var(--ds-text-xl); font-weight: var(--ds-font-semibold);
+  letter-spacing: var(--ds-tracking-tight); color: var(--ds-foreground); margin: 0;
+}
+.subtitle {
+  font-size: var(--ds-text-xs); color: var(--ds-muted-fg);
+  margin: var(--ds-space-1) 0 0 0;
+}
+.closeBtn {
+  width: var(--ds-avatar-sm); height: var(--ds-avatar-sm);
+  border-radius: var(--ds-radius-md); border: none; background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--ds-muted-fg); flex-shrink: 0;
+  transition: background var(--ds-duration-fast) var(--ds-ease-default),
+              color var(--ds-duration-fast) var(--ds-ease-default);
+}
+.closeBtn:hover { background: var(--ds-accent); color: var(--ds-foreground); }
+.closeBtn:focus-visible { box-shadow: var(--ds-shadow-focus); outline: none; }
+.closeIcon { width: 1rem; height: 1rem; }
+
+/* Body */
+.body {
+  padding: var(--ds-space-4) var(--ds-space-6);
+  display: flex; flex-direction: column; gap: var(--ds-space-4);
+}
+.field { display: flex; flex-direction: column; gap: var(--ds-space-1-5); }
+.coordGrid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ds-space-3); }
+.mono { font-variant-numeric: tabular-nums; }
+
+/* Footer */
+.footer {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: var(--ds-space-2);
+  padding: var(--ds-space-4) var(--ds-space-6);
+  border-top: 1px solid var(--ds-border);
+}

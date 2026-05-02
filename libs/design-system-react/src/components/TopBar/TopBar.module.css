@@ -1,0 +1,78 @@
+.topbar {
+  height: var(--ds-topbar-height);
+  display: flex; align-items: center; gap: var(--ds-space-4);
+  padding: 0 var(--ds-space-4); flex-shrink: 0;
+  background: var(--ds-topbar);
+  color: var(--ds-topbar-fg);
+  border-bottom: 1px solid var(--ds-topbar-border);
+  box-shadow: var(--ds-shadow-topbar);
+  z-index: var(--ds-z-topbar);
+}
+
+/* Brand */
+.brand {
+  display: flex; align-items: center; gap: var(--ds-space-2);
+  width: 260px; flex-shrink: 0;
+}
+.logoIcon {
+  width: var(--ds-avatar-sm); height: var(--ds-avatar-sm);
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-primary);
+  display: flex; align-items: center; justify-content: center;
+}
+.logoSvg { width: 18px; height: 18px; color: var(--ds-primary-fg); }
+.brandText { display: flex; flex-direction: column; line-height: 1; }
+.brandName {
+  font-size: var(--ds-text-base); font-weight: var(--ds-font-semibold);
+  letter-spacing: var(--ds-tracking-tight); color: var(--ds-topbar-fg);
+}
+.brandSub {
+  font-size: var(--ds-text-2xs); opacity: 0.6;
+  text-transform: uppercase; letter-spacing: var(--ds-tracking-wider);
+  margin-top: 1px;
+}
+
+/* Search */
+.searchWrapper { flex: 1; max-width: 36rem; margin: 0 auto; }
+.searchInput {
+  background: var(--ds-topbar-input-bg) !important;
+  border-color: var(--ds-topbar-input-border) !important;
+  color: var(--ds-topbar-fg) !important;
+}
+.searchInput::placeholder { color: oklch(1 0 0 / 40%) !important; }
+
+/* Actions */
+.actions { display: flex; align-items: center; gap: var(--ds-space-2); flex-shrink: 0; }
+.actionsGroup { display: flex; align-items: center; gap: var(--ds-space-1); }
+.iconBtn {
+  color: var(--ds-topbar-fg) !important;
+  min-width: auto;
+  padding: var(--ds-space-1);
+}
+.iconBtn:hover:not(:disabled) {
+  background: var(--ds-topbar-btn-hover) !important;
+}
+.iconBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.fileInput { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.actionBtn {
+  background: var(--ds-topbar-btn-bg) !important;
+  border-color: var(--ds-topbar-input-border) !important;
+  color: var(--ds-topbar-fg) !important;
+}
+.actionBtn:hover:not(:disabled) {
+  background: var(--ds-topbar-btn-hover) !important;
+}
+
+/* Avatar */
+.avatar {
+  width: var(--ds-avatar-sm); height: var(--ds-avatar-sm);
+  border-radius: var(--ds-radius-full);
+  background: var(--ds-primary); color: var(--ds-primary-fg);
+  border: 1px solid var(--ds-topbar-avatar-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--ds-text-xs); font-weight: var(--ds-font-semibold);
+  flex-shrink: 0;
+}

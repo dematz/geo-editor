@@ -1,0 +1,19 @@
+.chip {
+  display: inline-flex; align-items: center;
+  gap: var(--ds-space-1-5); padding: var(--ds-space-1) var(--ds-space-2);
+  border-radius: var(--ds-radius-full); border: 1px solid transparent;
+  font-family: var(--ds-font-sans); font-size: var(--ds-text-sm);
+  font-weight: var(--ds-font-medium); line-height: 1;
+  transition: opacity var(--ds-duration-fast) var(--ds-ease-default),
+              background var(--ds-duration-fast) var(--ds-ease-default);
+  white-space: nowrap;
+}
+.interactive {
+  cursor: pointer; background: none; outline: none;
+}
+.interactive:hover { opacity: 0.85; }
+.interactive:focus-visible { box-shadow: var(--ds-shadow-focus); }
+.dot {
+  width: 6px; height: 6px;
+  border-radius: var(--ds-radius-full); flex-shrink: 0;
+}

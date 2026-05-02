@@ -1,0 +1,134 @@
+/* Button.module.css — usa solo tokens --ds-* */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-space-2);
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: var(--ds-radius-md);
+  font-family: var(--ds-font-sans);
+  font-weight: var(--ds-font-medium);
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color var(--ds-duration-fast) var(--ds-ease-default),
+    border-color     var(--ds-duration-fast) var(--ds-ease-default),
+    opacity          var(--ds-duration-fast) var(--ds-ease-default);
+  outline: none;
+  user-select: none;
+  /* SVG icons inside button */
+  flex-shrink: 0;
+}
+
+.button:focus-visible {
+  box-shadow: var(--ds-shadow-focus);
+}
+
+.button:disabled,
+.button.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ── Variantes ─────────────────────────────── */
+.variant-primary {
+  background: var(--ds-primary);
+  color: var(--ds-primary-fg);
+  border-color: var(--ds-primary);
+  box-shadow: var(--ds-shadow-card);
+}
+.variant-primary:hover:not(:disabled) {
+  background: var(--ds-primary-hover);
+  border-color: var(--ds-primary-hover);
+}
+.variant-primary:active:not(:disabled) {
+  background: var(--ds-primary-active);
+}
+
+.variant-secondary {
+  background: var(--ds-secondary);
+  color: var(--ds-secondary-fg);
+  border-color: var(--ds-border);
+}
+.variant-secondary:hover:not(:disabled) {
+  background: var(--ds-secondary-hover);
+}
+
+.variant-ghost {
+  background: transparent;
+  color: var(--ds-foreground);
+  border-color: transparent;
+}
+.variant-ghost:hover:not(:disabled) {
+  background: var(--ds-accent);
+  color: var(--ds-accent-fg);
+}
+
+.variant-destructive {
+  background: var(--ds-destructive);
+  color: var(--ds-destructive-fg);
+  border-color: var(--ds-destructive);
+  box-shadow: var(--ds-shadow-card);
+}
+.variant-destructive:hover:not(:disabled) {
+  background: var(--ds-destructive-hover);
+}
+
+.variant-outline {
+  background: transparent;
+  color: var(--ds-foreground);
+  border-color: var(--ds-border);
+}
+.variant-outline:hover:not(:disabled) {
+  background: var(--ds-accent);
+}
+
+/* ── Topbar variant (inline override via className) ── */
+.variant-topbar {
+  background: var(--ds-topbar-btn-bg);
+  color: var(--ds-topbar-fg);
+  border-color: var(--ds-topbar-input-border);
+}
+.variant-topbar:hover:not(:disabled) {
+  background: var(--ds-topbar-btn-hover);
+}
+
+/* ── Tamaños ────────────────────────────────── */
+.size-sm {
+  height: 2rem;       /* 32px */
+  padding: 0 var(--ds-space-3);
+  font-size: var(--ds-text-sm);
+}
+
+.size-md {
+  height: 2.25rem;    /* 36px */
+  padding: 0 var(--ds-space-4);
+  font-size: var(--ds-text-base);
+}
+
+.size-lg {
+  height: 2.5rem;     /* 40px */
+  padding: 0 var(--ds-space-6);
+  font-size: var(--ds-text-base);
+}
+
+.size-icon {
+  height: 2.25rem;
+  width: 2.25rem;
+  padding: 0;
+  font-size: var(--ds-text-base);
+}
+
+/* ── Spinner ─────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: var(--ds-radius-full);
+  animation: ds-spin var(--ds-duration-slow) linear infinite;
+  flex-shrink: 0;
+}
