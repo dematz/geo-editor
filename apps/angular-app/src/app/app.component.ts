@@ -23,52 +23,51 @@ import type { ImportResult, PoiFeature, LngLat } from '@geo-editor/core';
 })
 export class AppComponent implements OnInit {
   readonly poiSvc = inject(PoiService);
-  private readonly mapSvc = inject(MapService);
-  private readonly fileIoSvc = inject(FileIoService);
+  private readonly mapSvc     = inject(MapService);
+  private readonly fileIoSvc  = inject(FileIoService);
 
   readonly sidebarCollapsed = signal(false);
-  readonly search = signal('');
-  readonly showForm = signal(false);
-  readonly pendingCoords = signal<LngLat | null>(null);
-  readonly editingPoi = signal<PoiFeature | null>(null);
-  readonly importResult = signal<ImportResult | null>(null);
+  readonly search           = signal('');
+  readonly showForm         = signal(false);
+  readonly pendingCoords    = signal<LngLat | null>(null);
+  readonly editingPoi       = signal<PoiFeature | null>(null);
+  readonly importResult     = signal<ImportResult | null>(null);
 
   readonly SIDEBAR_CATEGORIES = SIDEBAR_CATEGORIES;
 
   readonly mappedPois = computed(() => {
     const allPois = this.poiSvc.filteredFeatures();
     return allPois.map(f => ({
-      id: String(f.id),
-      name: f.properties.name,
+      id:       String(f.id),
+      name:     f.properties.name,
       category: toCategoryId(f.properties.category),
-      lat: f.geometry.coordinates[1],
-      lng: f.geometry.coordinates[0],
+      lat:      f.geometry.coordinates[1],
+      lng:      f.geometry.coordinates[0],
       selected: this.poiSvc.selectedId() === f.id,
     } as SidebarPoi));
   });
 
   readonly modalInitialData = computed(() => {
-    const editingPoi = this.editingPoi();
+    const editingPoi    = this.editingPoi();
     const pendingCoords = this.pendingCoords();
 
     if (editingPoi) {
-      const desc = editingPoi.properties['description'];
       return {
-        id: String(editingPoi.id),
-        name: editingPoi.properties.name,
-        category: toCategoryId(editingPoi.properties.category),
-        lat: editingPoi.geometry.coordinates[1].toString(),
-        lng: editingPoi.geometry.coordinates[0].toString(),
-        description: typeof desc === 'string' ? desc : '',
+        id:          String(editingPoi.id),
+        name:        editingPoi.properties.name,
+        category:    toCategoryId(editingPoi.properties.category),
+        lat:         editingPoi.geometry.coordinates[1].toString(),
+        lng:         editingPoi.geometry.coordinates[0].toString(),
+        description: editingPoi.properties.description ?? '',
       };
     }
 
     if (pendingCoords) {
       return {
-        name: '',
-        category: 'custom' as const,
-        lat: pendingCoords.lat.toString(),
-        lng: pendingCoords.lng.toString(),
+        name:        '',
+        category:    'custom' as const,
+        lat:         pendingCoords.lat.toString(),
+        lng:         pendingCoords.lng.toString(),
         description: '',
       };
     }
@@ -111,13 +110,8 @@ export class AppComponent implements OnInit {
     this.fileIoSvc.exportGeoJson(this.poiSvc.collection());
   }
 
-  onUndo(): void {
-    this.poiSvc.undo();
-  }
-
-  onRedo(): void {
-    this.poiSvc.redo();
-  }
+  onUndo(): void  { this.poiSvc.undo(); }
+  onRedo(): void  { this.poiSvc.redo(); }
 
   async onClearAll(): Promise<void> {
     if (confirm('¿Borrar todos los puntos y reiniciar?')) {
@@ -164,15 +158,20 @@ export class AppComponent implements OnInit {
 
   onModalSave(data: PoiFormData): void {
     if (this.editingPoi()) {
+      // ── feat(description): include description in update ──
       this.poiSvc.updatePoint(this.editingPoi()!.id!, {
-        name: data.name,
-        category: data.category,
+        name:        data.name,
+        category:    data.category,
+        description: data.description,
       });
     } else {
       const coords = this.pendingCoords() ??
-        (data.lat && data.lng ? { lat: parseFloat(data.lat), lng: parseFloat(data.lng) } : null);
+        (data.lat && data.lng
+          ? { lat: parseFloat(data.lat), lng: parseFloat(data.lng) }
+          : null);
       if (coords && !isNaN(coords.lat) && !isNaN(coords.lng)) {
-        this.poiSvc.addPoint(coords, data.name, data.category);
+        // ── feat(description): pass description when creating POI ──
+        this.poiSvc.addPoint(coords, data.name, data.category, data.description);
       }
     }
     this.onModalClose();

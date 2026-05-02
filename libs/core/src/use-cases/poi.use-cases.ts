@@ -17,7 +17,7 @@ export function createPoi(
 export function updatePoi(
   collection: PoiFeatureCollection,
   id: string | number,
-  updates: Partial<{ name: string; category: string }>
+  updates: Partial<{ name: string; category: string; description: string }>
 ): PoiFeatureCollection {
   return {
     ...collection,

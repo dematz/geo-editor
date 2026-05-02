@@ -2,8 +2,13 @@ import type { Command } from './command.types';
 import type { PoiFeature, PoiFeatureCollection, LngLat } from '../../domain';
 import { createPoi, addPoi, deletePoi, updatePoi } from '../poi.use-cases';
 
-export function addPoiCommand(coords: LngLat, name: string, category: string): Command {
-  const poi = createPoi(coords, name, category);
+export function addPoiCommand(
+  coords: LngLat,
+  name: string,
+  category: string,
+  description?: string
+): Command {
+  const poi = createPoi(coords, name, category, description ? { description } : undefined);
   return {
     description: `Add POI "${name}"`,
     execute: (state) => addPoi(state, poi),
@@ -21,8 +26,8 @@ export function removePoiCommand(poi: PoiFeature): Command {
 
 export function updatePoiCommand(
   id: string | number,
-  prev: Partial<{ name: string; category: string }>,
-  next: Partial<{ name: string; category: string }>
+  prev: Partial<{ name: string; category: string; description: string }>,
+  next: Partial<{ name: string; category: string; description: string }>
 ): Command {
   return {
     description: `Update POI "${next.name ?? id}"`,

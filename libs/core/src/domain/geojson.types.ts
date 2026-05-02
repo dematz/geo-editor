@@ -4,9 +4,10 @@ export interface LngLat {
 }
 
 export interface PoiProperties {
-  name: string;
-  category: string;
-  [key: string]: string | number | boolean | null;
+  name:          string;
+  category:      string;
+  description?:  string;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface PoiFeature {

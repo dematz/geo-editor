@@ -38,14 +38,21 @@ export class PoiService {
   }
 
   // ── Mutations ──────────────────────────────────────────
-  addPoint(coords: LngLat, name: string, category: string): void {
-    this._apply(addPoiCommand(coords, name, category));
+
+  // ── feat(description): forward optional description to addPoiCommand ──
+  addPoint(coords: LngLat, name: string, category: string, description?: string): void {
+    this._apply(addPoiCommand(coords, name, category, description));
   }
 
-  updatePoint(id: string | number, updates: Partial<{ name: string; category: string }>): void {
+  // ── feat(description): include description in prev snapshot and updates ──
+  updatePoint(id: string | number, updates: Partial<{ name: string; category: string; description: string }>): void {
     const poi = this.features().find((f) => f.id === id);
     if (!poi) return;
-    const prev = { name: poi.properties.name, category: poi.properties.category };
+    const prev = {
+      name:        poi.properties.name,
+      category:    poi.properties.category,
+      description: poi.properties.description ?? '',
+    };
     this._apply(updatePoiCommand(id, prev, updates));
   }
 

@@ -21,8 +21,8 @@ interface PoiState {
   canRedo:          () => boolean;
 
   restore:        () => Promise<void>;
-  addPoint:       (coords: LngLat, name: string, category: string) => void;
-  updatePoint:    (id: string | number, updates: Partial<{ name: string; category: string }>) => void;
+  addPoint:       (coords: LngLat, name: string, category: string, description?: string) => void;
+  updatePoint:    (id: string | number, updates: Partial<{ name: string; category: string; description: string }>) => void;
   removePoint:    (id: string | number) => void;
   selectPoint:    (id: string | number | null) => void;
   loadCollection: (c: PoiFeatureCollection) => void;
@@ -51,16 +51,22 @@ export const usePoiStore = create<PoiState>((set, get) => ({
     set({ loading: false });
   },
 
-  addPoint: (coords, name, category) => {
-    const next = applyCommand(get().history, addPoiCommand(coords, name, category));
+  // ── feat(description): forward optional description to addPoiCommand ──
+  addPoint: (coords, name, category, description) => {
+    const next = applyCommand(get().history, addPoiCommand(coords, name, category, description));
     set({ history: next });
     repo.save(next.present).catch(console.error);
   },
 
+  // ── feat(description): include description in prev snapshot and updates ──
   updatePoint: (id, updates) => {
     const poi = get().features().find((f) => f.id === id);
     if (!poi) return;
-    const prev = { name: poi.properties.name, category: poi.properties.category };
+    const prev = {
+      name:        poi.properties.name,
+      category:    poi.properties.category,
+      description: poi.properties.description ?? '',
+    };
     const next = applyCommand(get().history, updatePoiCommand(id, prev, updates));
     set({ history: next });
     repo.save(next.present).catch(console.error);

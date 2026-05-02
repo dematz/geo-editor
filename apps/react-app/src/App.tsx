@@ -20,10 +20,8 @@ export default function App() {
     clearAll, addPoint, updatePoint, features,
   } = usePoiStore();
 
-  // ── FIX: subscribe to `history` (changes on every mutation) instead of
-  //    `collection` (a stable function reference that never triggers re-renders).
-  //    Without this, the useEffect below ran only once at mount and never
-  //    re-fired when POIs were added, updated, or removed.
+  // ── FIX (markers): subscribe to `history` (changes on every mutation)
+  //    instead of `collection` (stable function ref that never re-renders).
   const history = usePoiStore(s => s.history);
 
   // ── UI state ────────────────────────────────────────
@@ -46,7 +44,7 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { restore(); }, []);
 
-  // ── FIX: depend on `history` so this effect re-runs on every store mutation ──
+  // ── FIX (markers): depend on `history` so effect re-runs on every mutation ──
   useEffect(() => { updateData(collection()); }, [history, updateData]);
 
   useEffect(() => { highlightPoi(selectedId); }, [selectedId, highlightPoi]);
@@ -72,12 +70,9 @@ export default function App() {
     }
   }
 
-  function handleExport() {
-    exportGeoJson(collection());
-  }
-
-  function handleUndo() { undo(); }
-  function handleRedo() { redo(); }
+  function handleExport() { exportGeoJson(collection()); }
+  function handleUndo()   { undo(); }
+  function handleRedo()   { redo(); }
 
   async function handleClearAll() {
     if (confirm('¿Borrar todos los puntos y reiniciar?')) {
@@ -121,11 +116,17 @@ export default function App() {
 
   function handleFormSave(data: POIFormData) {
     if (editingPoi) {
-      updatePoint(editingPoi.id!, { name: data.name, category: data.category });
+      // ── feat(description): include description in updates ──
+      updatePoint(editingPoi.id!, {
+        name:        data.name,
+        category:    data.category,
+        description: data.description,
+      });
     } else if (pendingCoords || (data.lat && data.lng)) {
       const coords = pendingCoords ?? { lat: parseFloat(data.lat), lng: parseFloat(data.lng) };
       if (!isNaN(coords.lat) && !isNaN(coords.lng)) {
-        addPoint(coords, data.name, data.category);
+        // ── feat(description): pass description when creating POI ──
+        addPoint(coords, data.name, data.category, data.description);
       }
     }
     setShowForm(false);
@@ -134,8 +135,8 @@ export default function App() {
   }
 
   // ── Derived state ───────────────────────────────────
-  const allPois     = filteredFeatures();
-  const mappedPois  = allPois.map(f => ({
+  const allPois    = filteredFeatures();
+  const mappedPois = allPois.map(f => ({
     id:       String(f.id),
     name:     f.properties.name,
     category: toCategoryId(f.properties.category),
