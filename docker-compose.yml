@@ -48,15 +48,31 @@ services:
     labels:
       - "com.example.description=React POI Editor Client"
 
+  # ── Storybook React-App (optional) ────────────────────────────
+  storybook-react:
+    build:
+      context: .
+      dockerfile: libs/design-system-react/Dockerfile.storybook
+    container_name: geo-editor-storybook-react
+    ports:
+      - "${STORYBOOK_REACT_PORT:-6006}:80"
+    restart: unless-stopped
+    networks:
+      - geo-net
+    labels:
+      - "com.example.description=React Design System Storybook"
+    profiles:
+      - dev
+
   # ── Lighthouse CI (optional) ────────────────────────────
-  # lighthouse:
-  #   image: patrickhulce/lhci-client:latest
-  #   depends_on: [angular-client, react-client]
-  #   command: ["lhci", "autorun"]
-  #   volumes:
-  #     - ./lighthouse-results:/app/lighthouse-results
-  #   networks:
-  #     - geo-net
+  lighthouse:
+    image: patrickhulce/lhci-client:latest
+    depends_on: [angular-client, react-client]
+    command: ["lhci", "autorun"]
+    volumes:
+      - ./lighthouse-results:/app/lighthouse-results
+    networks:
+      - geo-net
 
 networks:
   geo-net:
