@@ -1,7 +1,7 @@
 # 🔴 Angular App — Geo-Editor POI
 
 > Part of the [`geo-editor`](../../README.md) monorepo.
-> Framework: **Angular 18** · Architecture: **Standalone Components + Signals**
+> Framework: **Angular 18** · Architecture: **Standalone Components + Signals + @geo-editor/ui-angular**
 
 ---
 
@@ -10,11 +10,11 @@
 1. [Quick Start](#quick-start)
 2. [Project Structure](#project-structure)
 3. [Architecture Overview](#architecture-overview)
-4. [Services](#services)
-5. [Components](#components)
+4. [Design System Integration](#design-system-integration)
+5. [Services](#services)
 6. [State Management with Signals](#state-management-with-signals)
 7. [MapLibre Integration](#maplibre-integration)
-8. [How to Add a Feature](#how-to-add-a-feature)
+8. [Description Field](#description-field)
 9. [Build & Docker](#build--docker)
 10. [Troubleshooting](#troubleshooting)
 
@@ -23,7 +23,6 @@
 ## Quick Start
 
 ```bash
-# From monorepo root
 pnpm install
 pnpm nx serve angular-app
 # → http://localhost:4200
@@ -36,39 +35,31 @@ pnpm nx serve angular-app
 ```
 apps/angular-app/src/
 ├── app/
-│   ├── app.component.ts          ← Root standalone component — layout orchestrator
-│   ├── app.component.html        ← Main layout: toolbar + map + sidebar
-│   ├── app.component.scss        ← Global layout styles + design tokens
-│   ├── app.module.ts             ← NgModule bootstrap entry (minimal)
+│   ├── app.component.ts          ← Root standalone — layout + event orchestration
+│   ├── app.component.html        ← DsTopBar + DsSidebar + AppMap + DsPoiFormModal
+│   ├── app.component.scss        ← App shell layout only (.app-shell, .app-body, .app-map)
+│   ├── app.module.ts             ← Minimal NgModule bootstrap entry
 │   │
-│   ├── core/
-│   │   └── services/
-│   │       ├── poi.service.ts    ← POI state (Signals + HistoryState + Undo/Redo)
-│   │       ├── map.service.ts    ← MapLibre wrapper (layers, clustering, flyTo, snap)
-│   │       └── file-io.service.ts ← GeoJSON import (validate) + export (download)
+│   ├── core/services/
+│   │   ├── poi.service.ts        ← POI state (Signals + HistoryState + description support)
+│   │   ├── map.service.ts        ← MapLibre wrapper (pendingCollection buffer, snap)
+│   │   └── file-io.service.ts    ← GeoJSON import/export
 │   │
-│   ├── features/
-│   │   ├── map/
-│   │   │   └── map.component.ts  ← MapLibre canvas host, wires effects to services
-│   │   ├── toolbar/
-│   │   │   ├── toolbar.component.ts   ← Import / Export / Undo / Redo / Clear
-│   │   │   └── toolbar.component.html
-│   │   ├── poi-list/
-│   │   │   ├── poi-list.component.ts  ← Sidebar list with search input
-│   │   │   └── poi-list.component.html
-│   │   └── poi-form/
-│   │       ├── poi-form.component.ts  ← Reactive form for create/edit
-│   │       └── poi-form.component.html
+│   ├── features/map/
+│   │   └── map.component.ts      ← MapLibre host — effect() in constructor
 │   │
-│   └── shared/
-│       └── components/
-│           └── import-report/
-│               └── import-report.component.ts ← Import result banner
+│   ├── shared/components/
+│   │   └── import-report/        ← Import result banner (uses DS tokens inline)
+│   │
+│   └── utils/
+│       └── category-map.ts       ← Maps core category strings → CategoryId + SIDEBAR_CATEGORIES
 │
-├── main.ts                       ← Bootstrap via AppModule
-├── styles.scss                   ← MapLibre CSS import + global reset
+├── main.ts
+├── styles.scss                   ← MapLibre CSS + DS body tokens (no hardcoded values)
 └── index.html
 ```
+
+**Note:** `features/toolbar/`, `features/poi-list/`, `features/poi-form/`, and `app-routing.module.ts` were removed — fully replaced by `@geo-editor/ui-angular` DS components.
 
 ---
 
@@ -77,28 +68,92 @@ apps/angular-app/src/
 ```
 AppComponent (standalone, orchestrator)
     │
-    ├── ToolbarComponent    ← import / export / undo / redo / clear
-    ├── ImportReportComponent ← shows import summary banner
-    ├── MapComponent        ← hosts MapLibre canvas, emits (mapClick)
-    └── Sidebar
-        ├── PoiListComponent  ← lists POIs, search, select, edit, delete
-        └── PoiFormComponent  ← create (from map click) or edit POI
+    ├── DsTopBarComponent     ← search, undo/redo, import, export, clear, avatar
+    ├── ImportReportComponent ← import result banner (DS tokens, no external classes)
+    ├── MapComponent          ← MapLibre canvas, emits (mapClick)
+    ├── DsSidebarComponent    ← POI list, categories, New POI button, collapse toggle
+    └── DsPoiFormModalComponent ← create / edit form (name, category, description, coords)
 ```
 
-**Data flow:**
+**Data flow — create POI:**
 ```
 User clicks map
-  → MapComponent emits (mapClick)
+  → MapComponent (effect in constructor) emits (mapClick) output
     → AppComponent.onMapClick() sets pendingCoords signal
-      → PoiFormComponent appears
-        → User fills form → (saved) event
-          → AppComponent.onFormSaved()
-            → PoiService.addPoint()
-              → applyCommand() → HistoryState updated
+      → DsPoiFormModal opens with lat/lng pre-filled
+        → User fills name, category, description → save
+          → AppComponent.onModalSave()
+            → PoiService.addPoint(coords, name, category, description)
+              → addPoiCommand() → applyCommand() → HistoryState updated
                 → collection signal changes
-                  → MapComponent effect() → MapService.updateData()
-                  → PoiListComponent renders new list
+                  → MapService.updateData() via effect()
+                  → DsSidebarComponent renders updated list
 ```
+
+---
+
+## Design System Integration
+
+The Angular app consumes two DS packages:
+
+```typescript
+// angular.json — styles array (order matters)
+"styles": [
+  "../../libs/design-tokens/src/index.css",  // ← tokens first
+  "src/styles.scss"                           // ← app overrides after
+]
+
+// tsconfig.json — path aliases
+"paths": {
+  "@geo-editor/ui-angular": ["../../libs/design-system-angular/src/index.ts"],
+  "@geo-editor/tokens":     ["../../libs/design-tokens/src/index.css"],
+  "@geo-editor/core":       ["../../libs/core/src/index.ts"]
+}
+```
+
+### Component usage in AppComponent
+
+```typescript
+imports: [
+  MapComponent,
+  ImportReportComponent,
+  DsTopBarComponent,        // ← @geo-editor/ui-angular
+  DsSidebarComponent,       // ← @geo-editor/ui-angular
+  DsPoiFormModalComponent,  // ← @geo-editor/ui-angular
+]
+```
+
+### ViewEncapsulation.None — CSS selector rules
+
+All DS components use `ViewEncapsulation.None` — there is no shadow DOM. This has two important consequences:
+
+**1. `:host` selectors have no effect.** Use direct element selectors instead:
+```css
+/* ❌ Does not work */
+:host ds-button.newBtn { width: 100%; }
+
+/* ✅ Correct — target the rendered host element and its inner .button */
+.newBtnWrapper ds-button { display: flex; width: 100%; }
+.newBtnWrapper ds-button .button { width: 100%; justify-content: center; }
+```
+
+**2. Styles are global.** DS component CSS classes (`.button`, `.input`, `.select`) are available anywhere in the document. Use parent context selectors to scope overrides:
+```css
+/* Override button colors only inside the topbar context */
+.actionsGroup ds-button .button { color: var(--ds-topbar-fg); }
+```
+
+### category-map.ts — bridging core ↔ DS
+
+Core uses a wider set of category strings (`landmark`, `cafe`, `museum`, `transport`, etc.) while the DS `CategoryId` is limited to `restaurant | hotel | park | hospital | custom`. The mapping is handled in `utils/category-map.ts`:
+
+```typescript
+export function toCategoryId(raw: string): CategoryId {
+  return RAW_TO_CAT[raw?.toLowerCase()] ?? 'custom';
+}
+```
+
+**Pending refactor:** `CategoryId` should be moved to `libs/core/src/domain/` to eliminate duplication between `ui-react` and `ui-angular`.
 
 ---
 
@@ -106,235 +161,199 @@ User clicks map
 
 ### `PoiService`
 
-Central state manager using **Angular Signals**. All state is reactive — no manual subscriptions needed.
-
 ```typescript
-// Signals (read-only outside service)
-readonly collection       // computed(): current PoiFeatureCollection
+// Signals
+readonly collection       // computed(): PoiFeatureCollection
 readonly features         // computed(): PoiFeature[]
-readonly filteredFeatures // computed(): filtered by search query
-readonly selectedId       // signal: currently selected POI id
+readonly filteredFeatures // computed(): filtered by search
+readonly selectedId       // signal: selected POI id
 readonly canUndo          // computed(): boolean
 readonly canRedo          // computed(): boolean
-readonly loading          // signal: async restore in progress
+readonly loading          // signal: restore in progress
 
-// Actions
-addPoint(coords, name, category)     // creates POI via Command
-updatePoint(id, updates)             // updates via Command (undoable)
-removePoint(id)                      // removes via Command (undoable)
-loadCollection(collection)           // bulk load via Command (undoable)
-selectPoint(id | null)               // UI selection (not undoable)
-setFilter(opts)                      // search filter (not undoable)
-undo()                               // steps back in history
-redo()                               // steps forward in history
-clearAll()                           // resets state + clears localStorage
-restore()                            // loads from localStorage on init
+// Actions — all mutations go through applyCommand() for undo/redo
+addPoint(coords, name, category, description?)  // ← description optional
+updatePoint(id, { name?, category?, description? })
+removePoint(id)
+loadCollection(collection)
+selectPoint(id | null)
+setFilter({ query?, categories? })
+undo() / redo()
+clearAll()
+restore()                 // loads from localStorage on init
 ```
 
 ### `MapService`
 
-Wraps MapLibre GL JS. Keeps Angular outside MapLibre's rendering loop via `NgZone.runOutsideAngular()`.
-
 ```typescript
-initMap(container, onMapClick)   // initializes map + layers + click handler
-updateData(collection)           // updates GeoJSON source
-flyTo(lng, lat)                  // animates map to coordinates
-highlightPoi(id | null)          // changes circle color for selected POI
-destroy()                        // removes map instance
+initMap(container, onMapClick)  // sets up layers, snap, pendingCollection buffer
+updateData(collection)          // safe to call before load — buffered internally
+flyTo(lng, lat)
+highlightPoi(id | null)
+destroy()
 ```
 
-**Coordinate snapping** is applied inside `initMap()` before emitting the click event:
+**`pendingCollection` buffer pattern:**
 ```typescript
-const snapped = snapToGrid(e.lngLat.lng, e.lngLat.lat); // 4 decimal places
-this.zone.run(() => onMapClick(snapped));
+// If map hasn't loaded yet, store data for later flush
+updateData(collection: PoiFeatureCollection): void {
+  if (!this.styleLoaded) {
+    this.pendingCollection = collection;  // buffer
+    return;
+  }
+  // ... setData on source
+}
+
+// On load, flush pending data
+private setupSourceAndLayers(): void {
+  // ... add source and layers
+  this.styleLoaded = true;
+  if (this.pendingCollection) {
+    this.updateData(this.pendingCollection);
+    this.pendingCollection = null;
+  }
+}
 ```
-
-### `FileIoService`
-
-```typescript
-importGeoJson(file: File): Promise<ImportResult>   // reads + validates
-exportGeoJson(collection, filename?)               // triggers browser download
-```
-
----
-
-## Components
-
-### `AppComponent`
-- Root standalone component
-- Orchestrates all UI state: `showForm`, `pendingCoords`, `editingPoi`, `importResult`
-- Wires events between child components
-- Calls `PoiService.restore()` on `ngOnInit`
-
-### `MapComponent`
-- Hosts the MapLibre `<div>` container via `@ViewChild`
-- Initializes map in `ngAfterViewInit()`
-- Uses `effect()` to reactively sync map with store:
-```typescript
-effect(() => this.mapService.updateData(this.poiService.collection()));
-effect(() => this.mapService.highlightPoi(this.poiService.selectedId()));
-```
-
-### `ToolbarComponent`
-- Import: triggers file input → `FileIoService.importGeoJson()` → emits `(importDone)`
-- Export: calls `FileIoService.exportGeoJson()`
-- Undo/Redo: calls `poiSvc.undo()` / `poiSvc.redo()`, disabled via `poiSvc.canUndo()` / `poiSvc.canRedo()`
-- Clear: confirms then calls `poiSvc.clearAll()`
-
-### `PoiListComponent` (standalone)
-- Renders `poiSvc.filteredFeatures()` reactively
-- Search input calls `poiSvc.setFilter({ query })`
-- Select: calls `poiSvc.selectPoint()` + `mapSvc.flyTo()`
-- Edit: emits `(editRequest)` to parent
-- Delete: calls `poiSvc.removePoint()` with confirm dialog
-
-### `PoiFormComponent` (standalone)
-- Reactive form with `FormBuilder` + `Validators`
-- `[poi]` input → edit mode (pre-fills form)
-- `[coords]` input → create mode (shows coordinates)
-- Emits `(saved)` with `{ name, category }` on valid submit
-
-### `ImportReportComponent` (standalone)
-- Displays `ImportResult` summary and error details
-- Emits `(dismissed)` on close
 
 ---
 
 ## State Management with Signals
 
-Angular Signals replace both NgRx and RxJS for local state. Key patterns used:
+### Critical rule — `effect()` must be in the constructor
 
 ```typescript
-// Writable signal
-private readonly _history = signal<HistoryState>(initHistory(emptyCollection()));
+// ❌ WRONG — effect() called outside injection context
+export class MapComponent implements AfterViewInit {
+  ngAfterViewInit(): void {
+    this.mapService.initMap(...);
+    effect(() => { ... }); // silently fails — never registers
+  }
+}
 
-// Computed signal (auto-updates when _history changes)
-readonly canUndo = computed(() => canUndo(this._history()));
+// ✅ CORRECT — effect() in constructor
+export class MapComponent implements AfterViewInit {
+  constructor() {
+    effect(() => {
+      this.mapService.updateData(this.poiService.collection());
+    });
+    effect(() => {
+      this.mapService.highlightPoi(this.poiService.selectedId());
+    });
+  }
 
-// Reading in template — no async pipe needed
-{{ poiSvc.canUndo() }}
-
-// Effect — runs when dependency signals change
-effect(() => {
-  this.mapService.updateData(this.poiService.collection());
-});
+  ngAfterViewInit(): void {
+    this.mapService.initMap(...); // map init still here
+  }
+}
 ```
 
-**Why not RxJS here?**
-- No async streams needed — all state is synchronous
-- Signals have simpler mental model for component authors
-- Better performance: only affected computed signals re-evaluate
+**Why:** Angular's `effect()` requires an active injection context to register the reactive dependency. The constructor runs inside the injection context; `ngAfterViewInit` does not.
 
 ---
 
 ## MapLibre Integration
 
-MapLibre is initialized **outside Angular's zone** to prevent unnecessary change detection cycles:
+Map initialization runs **outside Angular's zone** to prevent unnecessary change detection cycles:
 
 ```typescript
 this.zone.runOutsideAngular(() => {
   this.map = new Map({ container, style: OSM_STYLE });
+
   this.map.on('click', (e) => {
-    // Only zone.run() when we need Angular to react
-    this.zone.run(() => onMapClick(snapped));
+    const snapped = snapToGrid(e.lngLat.lng, e.lngLat.lat);
+    this.zone.run(() => onMapClick(snapped)); // re-enter zone for Angular reactivity
   });
 });
 ```
 
-**Layers setup:**
+**Layer stack:**
 ```
-GeoJSON Source (cluster: true)
-  ├── pois-cluster        ← colored circles for clusters
-  ├── pois-cluster-count  ← count label inside cluster
-  └── pois-layer          ← individual POI circles
-```
-
-**Budget configuration** (`angular.json`):
-MapLibre GL JS is ~1.4MB. Angular's default 500KB budget is increased:
-```json
-"budgets": [
-  { "type": "initial", "maximumWarning": "1mb", "maximumError": "2mb" }
-]
+GeoJSON Source (cluster: true, clusterMaxZoom: 14)
+  ├── pois-cluster        ← cluster circles (blue → purple → pink by count)
+  ├── pois-cluster-count  ← abbreviated count label
+  └── pois-layer          ← individual POI circles (8px, blue, white stroke)
 ```
 
 ---
 
-## How to Add a Feature
+## Description Field
 
-### Add a new POI property (e.g. `description`)
+The `description` optional field flows through the entire stack:
 
-1. **Core** — extend `PoiProperties` in `libs/core/src/domain/geojson.types.ts`
-2. **Form** — add field to `PoiFormComponent` template and `FormBuilder`
-3. **List** — display in `PoiListComponent` template
-4. **No changes needed** to `PoiService`, `MapService`, or `LocalStorageRepository`
+```
+DsPoiFormModal (textarea bound via [(ngModel)])
+  → AppComponent.onModalSave(data: PoiFormData)
+    → PoiService.addPoint(coords, name, category, data.description)
+      → addPoiCommand(coords, name, category, description)
+        → createPoi(coords, name, category, { description })
+          → stored in PoiFeature.properties.description
+            → JSON.stringify in LocalStorageRepository → persisted
+```
 
-### Add a new map layer (e.g. heatmap)
+On edit, `modalInitialData` computed signal reads `editingPoi.properties['description']`:
+```typescript
+const desc = editingPoi.properties['description'];
+description: typeof desc === 'string' ? desc : '',
+```
 
-1. Add layer in `MapService.setupSourceAndLayers()`
-2. Add toggle signal in `MapService`
-3. Wire toggle button in `ToolbarComponent`
+Undo/Redo captures `description` in both `prev` and `next` snapshots inside `updatePoiCommand`.
 
 ---
 
 ## Build & Docker
 
 ```bash
-# Development build
-pnpm nx build angular-app
+# Development
+pnpm nx serve angular-app
 
-# Production build
+# Production
 pnpm nx build angular-app --configuration=production
 # Output: apps/angular-app/dist/angular-app/browser/
 
-# Docker (from monorepo root)
+# Docker
 docker compose build angular-client --no-cache
 ```
 
-The Dockerfile uses a **multi-stage build**:
-- Stage 1 (builder): Node 20 Alpine → `pnpm install` → `nx build angular-app --configuration=production`
-- Stage 2 (runtime): Nginx 1.25 Alpine serves `dist/angular-app/browser/`
+**Dockerfile key points:**
+- Copies `libs/design-tokens`, `libs/design-system-angular` into build context
+- Runs `pnpm nx reset` before build to clear stale project graph cache
+- `libs/design-system-angular/tsconfig.json` extends `../../tsconfig.json` (root) — root `tsconfig.json` must exist in Docker context
 
 ---
 
 ## Troubleshooting
 
-### `NG8001: 'app-xxx' is not a known element`
-**Cause:** A standalone component is used in a template but not imported.
-**Fix:** Add the component to the `imports[]` array of the consuming standalone component:
-```typescript
-@Component({
-  standalone: true,
-  imports: [MyNewComponent], // ← add here
-})
-```
+### POI markers not visible on map after load
+**Cause:** `effect()` was registered in `ngAfterViewInit` instead of the constructor — it silently failed, so `updateData()` was never called reactively.
+**Fix:** Move all `effect()` calls to the `constructor()`.
 
-### `'imports' is only valid on a component that is standalone`
-**Cause:** `imports[]` array used without `standalone: true`.
-**Fix:** Add `standalone: true` to the `@Component` decorator.
+### POI markers visible initially but disappear after restore
+**Cause:** `updateData()` was called before `map.on('load')` fired. The guard `if (!styleLoaded) return` discarded the data silently.
+**Fix:** `MapService` now buffers data in `pendingCollection` and flushes on load.
 
-### MapLibre map not rendering (blank gray area)
-**Cause:** Container has no height, or `initMap()` called before DOM is ready.
-**Fix:** Ensure `ngAfterViewInit()` (not `ngOnInit()`) initializes the map, and the container has explicit `height: 100%`.
+### `Failed to process project graph` in Docker
+**Cause:** Nx cannot find `tsconfig.json` referenced by `libs/design-system-angular/tsconfig.json`.
+**Fix:** Ensure root `tsconfig.json` is copied in the Dockerfile AND `pnpm nx reset` runs before the build.
 
-### `NX Invalid Cache Directory` on Docker build
-**Cause:** Nx cache from a different machine is copied into the Docker context.
-**Fix:** Add `.nx/cache` and `.nx/workspace-data` to `.dockerignore`.
+### `NG8001: 'ds-xxx' is not a known element`
+**Cause:** DS component not added to `imports[]` of the consuming standalone component.
+**Fix:** Add the component to `imports: [DsTopBarComponent, ...]` in `@Component`.
 
-### Angular budget exceeded error
-**Cause:** MapLibre GL JS exceeds Angular's default 500KB initial bundle budget.
-**Fix:** Increase budgets in `angular.json`:
-```json
-{ "type": "initial", "maximumWarning": "1mb", "maximumError": "2mb" }
-```
+### `imports` array error without `standalone: true`
+**Fix:** Add `standalone: true` to the `@Component` decorator before using `imports[]`.
 
-### `Cannot read properties of undefined (reading 'features')`
-**Cause:** A component reads `collection.features` but `collection` is now a function (Signal computed).
-**Fix:** Call it as a function: `collection().features`.
+### Buttons invisible in TopBar
+**Cause:** CSS used `:host ds-button .button` which has no effect with `ViewEncapsulation.None`.
+**Fix:** Use `.actionsGroup ds-button .button` — target from nearest ancestor class context.
 
-### Signals `effect()` not triggering
-**Cause:** `effect()` called outside an injection context (e.g. inside `setTimeout`).
-**Fix:** Always call `effect()` inside the constructor or `ngAfterViewInit()`, or pass `{ injector }` option.
+### New POI button not full width
+**Cause:** `:host ds-button.newBtn { width: 100% }` has no effect without shadow DOM.
+**Fix:** `.newBtnWrapper ds-button { display: flex; width: 100%; }` + `.newBtnWrapper ds-button .button { width: 100%; }`.
+
+### Categories section not at sidebar bottom
+**Cause:** `.inner { height: 100% }` collapses in a flex column without `flex: 1` and `min-height: 0` on the scrollable child.
+**Fix:** `.inner { flex: 1; min-height: 0; }` + `.list { flex: 1; min-height: 0; }` + `.categories { flex-shrink: 0; }`.
 
 ### `pnpm install --frozen-lockfile` fails in Docker
-**Cause:** `package.json` was modified but `pnpm-lock.yaml` was not regenerated.
-**Fix:** Run `pnpm install` locally before committing, then rebuild Docker.
+**Cause:** `package.json` changed but `pnpm-lock.yaml` not regenerated.
+**Fix:** Run `pnpm install` locally from monorepo root, commit the updated lockfile.

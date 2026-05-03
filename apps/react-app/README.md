@@ -1,7 +1,7 @@
 # 🔵 React App — Geo-Editor POI
 
 > Part of the [`geo-editor`](../../README.md) monorepo.
-> Framework: **React 19** · State: **Zustand** · Bundler: **Vite 8**
+> Framework: **React 19** · State: **Zustand** · Bundler: **Vite 8** · UI: **@geo-editor/ui-react**
 
 ---
 
@@ -10,21 +10,18 @@
 1. [Quick Start](#quick-start)
 2. [Project Structure](#project-structure)
 3. [Architecture Overview](#architecture-overview)
-4. [State Management with Zustand](#state-management-with-zustand)
-5. [Custom Hooks](#custom-hooks)
-6. [Components](#components)
-7. [MapLibre Integration](#maplibre-integration)
-8. [Vite Configuration](#vite-configuration)
-9. [How to Add a Feature](#how-to-add-a-feature)
-10. [Build & Docker](#build--docker)
-11. [Troubleshooting](#troubleshooting)
+4. [Design System Integration](#design-system-integration)
+5. [State Management with Zustand](#state-management-with-zustand)
+6. [Custom Hooks](#custom-hooks)
+7. [Description Field](#description-field)
+8. [Build & Docker](#build--docker)
+9. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Quick Start
 
 ```bash
-# From monorepo root
 pnpm install
 pnpm nx serve react-app
 # → http://localhost:3000
@@ -36,22 +33,22 @@ pnpm nx serve react-app
 
 ```
 apps/react-app/src/
-├── App.tsx                    ← Root component — layout + state wiring
-├── main.tsx                   ← ReactDOM.createRoot entry point
-├── index.css                  ← Global styles (shared design tokens with Angular)
+├── App.tsx                    ← Root — layout + event wiring + history dependency
+├── main.tsx                   ← Entry — imports @geo-editor/tokens before app CSS
+├── index.css                  ← App shell layout only (.app-shell, .app-body, .app-map)
 │
 ├── store/
-│   └── poi.store.ts           ← Zustand store (all POI state + undo/redo)
+│   └── poi.store.ts           ← Zustand store — description support + undo/redo
 │
 ├── hooks/
-│   ├── useMapLibre.ts         ← MapLibre lifecycle, layers, click handler + snap
-│   └── useFileIo.ts           ← GeoJSON import (validate) + export (download)
+│   ├── useMapLibre.ts         ← MapLibre — pendingDataRef buffer + snap
+│   └── useFileIo.ts           ← GeoJSON import/export
 │
-└── components/
-    ├── Toolbar.tsx             ← Import / Export / Undo / Redo / Clear
-    ├── PoiList.tsx             ← Sidebar list with search input
-    ├── PoiForm.tsx             ← Create/edit form with validation
-    └── ImportReport.tsx        ← Import result banner with error details
+├── components/
+│   └── ImportReport.tsx       ← Import result banner (DS tokens inline, no external CSS)
+│
+└── utils/
+    └── categoryMap.ts         ← Maps core category strings → CategoryId + SIDEBAR_CATEGORIES
 ```
 
 ---
@@ -59,89 +56,129 @@ apps/react-app/src/
 ## Architecture Overview
 
 ```
-App.tsx (root, state coordinator)
+App.tsx (root coordinator)
     │
-    ├── <Toolbar />           import / export / undo / redo / clear
-    ├── <ImportReport />      shows import result banner
+    ├── <TopBar />            search, undo/redo, import, export, clear (from @geo-editor/ui-react)
+    ├── <ImportReport />      import result banner (DS tokens, self-contained)
     ├── <div ref={mapContainer} />  ← MapLibre renders here
-    └── <aside> (sidebar)
-        ├── <PoiList />       list + search + select + edit + delete
-        └── <PoiForm />       create (from map click) or edit POI
+    └── <aside>
+        ├── <Sidebar />       POI list, categories, New POI (from @geo-editor/ui-react)
+        └── <POIFormModal />  create/edit form with description (from @geo-editor/ui-react)
 ```
 
-**Data flow:**
+**Data flow — create POI:**
 ```
 User clicks map
-  → useMapLibre onMapClick callback
-    → snapToGrid() applied
-      → App.tsx state: pendingCoords set
-        → <PoiForm /> appears
-          → User submits → onSaved()
-            → usePoiStore.addPoint()
-              → applyCommand() → history updated
-                → collection() returns new state
-                  → useEffect syncs map → useMapLibre.updateData()
-                  → <PoiList /> re-renders
+  → useMapLibre onMapClick (snapped coords via snapToGrid)
+    → App state: pendingCoords set, showForm = true
+      → <POIFormModal open /> with lat/lng pre-filled
+        → User fills name, category, description → save
+          → handleFormSave(data)
+            → store.addPoint(coords, name, category, data.description)
+              → addPoiCommand() → applyCommand() → history updated
+                → useEffect([history]) → updateData() → map refreshed
+                → <Sidebar /> re-renders with new POI
 ```
+
+---
+
+## Design System Integration
+
+### Token import order
+
+```typescript
+// main.tsx — tokens must load before any component CSS
+import '@geo-editor/tokens';  // ← CSS custom properties --ds-*
+import './index.css';         // ← app shell layout (uses DS tokens)
+import App from './App';
+```
+
+### Component imports
+
+```typescript
+// App.tsx
+import {
+  TopBar, Sidebar, POIFormModal,
+  type POIFormData,
+} from '@geo-editor/ui-react';
+```
+
+### Vite alias resolution
+
+```typescript
+// vite.config.ts
+resolve: {
+  alias: {
+    '@geo-editor/core': path.resolve(__dirname, '../../libs/core/src/index.ts'),
+  },
+},
+```
+
+**Note:** `@geo-editor/ui-react` is resolved via pnpm workspace symlink. `preserveSymlinks: true` was tested but breaks React's internal `scheduler` module resolution — the alias approach is used for `core` only.
+
+### categoryMap.ts — bridging core ↔ DS
+
+```typescript
+// Maps wider core categories to the DS CategoryId union type
+const RAW_TO_CAT: Record<string, CategoryId> = {
+  restaurant: 'restaurant', cafe: 'restaurant',
+  hotel: 'hotel',
+  park: 'park', landmark: 'park', museum: 'park',
+  hospital: 'hospital', health: 'hospital',
+  shop: 'custom', transport: 'custom', education: 'custom',
+  other: 'custom', custom: 'custom',
+};
+```
+
+**Pending refactor:** `CategoryId` should move to `libs/core/src/domain/` to eliminate duplication with `@geo-editor/ui-angular`.
 
 ---
 
 ## State Management with Zustand
 
-All POI state lives in a single Zustand store (`poi.store.ts`). It wraps `@geo-editor/core` use-cases and exposes both state and actions.
+### Critical rule — `history` not `collection()` as `useEffect` dependency
 
 ```typescript
-// State
-history:    HistoryState         // present + past[] + future[]
+// ❌ WRONG — collection() has a stable function reference in Zustand
+// useEffect never re-runs because the reference never changes
+useEffect(() => {
+  updateData(collection());
+}, [collection, updateData]); // collection is always the same function
+
+// ✅ CORRECT — history is the raw state object that changes on every mutation
+useEffect(() => {
+  updateData(collection());
+}, [history, updateData]); // history reference changes → effect re-runs
+```
+
+**Why Zustand computed functions have stable references:** `collection`, `features`, `filteredFeatures` are plain functions defined in the store — their reference never changes. You must subscribe to the underlying state (`history`) that they read from.
+
+### Store API
+
+```typescript
+// State (raw — use as useEffect deps)
+history:    HistoryState
 selectedId: string | number | null
-loading:    boolean
 filter:     FilterOptions
 
-// Computed (functions, not values — call them)
+// Computed (call as functions — NOT suitable as useEffect deps)
 collection()        → PoiFeatureCollection
 features()          → PoiFeature[]
-filteredFeatures()  → PoiFeature[] (filtered by search)
+filteredFeatures()  → filtered by search query and categories
 canUndo()           → boolean
 canRedo()           → boolean
 
 // Actions
-restore()                         // load from localStorage
-addPoint(coords, name, category)  // undoable
-updatePoint(id, updates)          // undoable
-removePoint(id)                   // undoable
-loadCollection(collection)        // undoable (import)
-selectPoint(id | null)            // UI only, not undoable
-setFilter(opts)                   // search filter, not undoable
-undo()                            // steps back
-redo()                            // steps forward
-clearAll()                        // reset + clear localStorage
+restore()
+addPoint(coords, name, category, description?)  // ← description optional
+updatePoint(id, { name?, category?, description? })
+removePoint(id)
+selectPoint(id | null)
+loadCollection(collection)
+setFilter({ query?, categories? })
+undo() / redo()
+clearAll()
 ```
-
-**Important:** `collection`, `features`, `filteredFeatures`, `canUndo`, `canRedo` are **functions** (not plain values) because Zustand does not support computed properties natively. Always call them:
-
-```tsx
-// ✅ Correct
-const { collection, features } = usePoiStore();
-collection().features.length
-features().map(f => ...)
-
-// ❌ Wrong — will cause "cannot read .features of undefined"
-collection.features
-```
-
-### Undo/Redo pattern
-
-Every mutation goes through `applyCommand()` from `@geo-editor/core`:
-
-```typescript
-addPoint: (coords, name, category) => {
-  const next = applyCommand(get().history, addPoiCommand(coords, name, category));
-  set({ history: next });
-  repo.save(next.present).catch(console.error);
-},
-```
-
-This keeps history immutable and side-effect free in the core.
 
 ---
 
@@ -149,162 +186,93 @@ This keeps history immutable and side-effect free in the core.
 
 ### `useMapLibre(containerRef, onMapClick)`
 
-Manages the full MapLibre lifecycle: initialization, layer setup, event handlers, and cleanup.
-
 ```typescript
 const { updateData, flyTo, highlightPoi } = useMapLibre(mapContainer, (coords) => {
-  // coords already snapped to 4 decimal places
+  // coords already snapped to 4 decimal places (~11m)
   setPendingCoords(coords);
   setShowForm(true);
 });
 ```
 
-**Key implementation details:**
-- Map is initialized once in `useEffect([], [])` (empty deps)
-- `onMapClick` is stored in a `ref` (`onClickRef`) to avoid stale closures without re-running the effect
-- Cleanup: `map.remove()` is called in the effect return function
-- Coordinate snapping via `snapToGrid()` is applied before calling `onMapClick`
+**`pendingDataRef` buffer pattern:**
 
 ```typescript
-map.on('click', (e) => {
-  const features = map.queryRenderedFeatures(e.point, { layers: [LAYER_ID] });
-  if (features.length === 0) {
-    const snapped = snapToGrid(e.lngLat.lng, e.lngLat.lat);
-    onClickRef.current(snapped);
+// Data arriving before map load is buffered and flushed on load
+map.on('load', () => {
+  setupLayers(map);
+  styleLoaded.current = true;
+
+  // Flush any data that arrived before load
+  if (pendingDataRef.current) {
+    source.setData(pendingDataRef.current);
+    pendingDataRef.current = null;
   }
 });
+
+// Safe to call at any time — buffered if map not ready
+const updateData = useCallback((collection: PoiFeatureCollection) => {
+  if (!styleLoaded.current || !mapRef.current) {
+    pendingDataRef.current = collection; // buffer for flush on load
+    return;
+  }
+  source?.setData(collection);
+}, []);
 ```
 
-### `useFileIo()`
+**Stable callback pattern:**
 
 ```typescript
-const { importGeoJson, exportGeoJson } = useFileIo();
+// onMapClick stored in ref to avoid stale closures
+// without this, the map event listener would capture the initial callback value
+const onClickRef = useRef(onMapClick);
+onClickRef.current = onMapClick; // always up-to-date
 
-// Import — returns ImportResult with errors and summary
-const result = await importGeoJson(file);
-
-// Export — triggers browser download
-exportGeoJson(collection(), 'my-pois.geojson');
-```
-
-Both functions are wrapped in `useCallback` with empty deps — stable references that won't cause unnecessary re-renders.
-
----
-
-## Components
-
-### `App.tsx`
-- Root component coordinating layout and events
-- Manages UI-only state: `showForm`, `pendingCoords`, `editingPoi`, `importResult`
-- Calls `restore()` on mount via `useEffect`
-- Syncs map with store via `useEffect`:
-```tsx
-useEffect(() => { updateData(collection()); }, [collection(), updateData]);
-useEffect(() => { highlightPoi(selectedId); }, [selectedId, highlightPoi]);
-```
-
-### `Toolbar.tsx`
-- File input (hidden, triggered by label) for GeoJSON import
-- Merges imported features with existing: `[...collection().features, ...result.imported]`
-- Undo/Redo buttons disabled via `canUndo()` / `canRedo()`
-
-### `PoiList.tsx`
-- Renders `filteredFeatures()` — updates automatically when store changes
-- Local state `query` drives `setFilter({ query })`
-- Click → `selectPoint()` + `flyTo()`
-- Edit → calls `onEditRequest(poi)` prop (bubbles to App.tsx)
-- Delete → `removePoint()` with `confirm()`
-
-### `PoiForm.tsx`
-- Controlled form with local `name` and `category` state
-- `useEffect` on `[poi]` dependency resets form when switching between create/edit
-- Validates on submit: name ≥ 2 chars, category selected
-- Shows coordinates when in create mode
-
-### `ImportReport.tsx`
-- Pure presentational component
-- Returns `null` when `result` prop is `null`
-- Shows collapsible error list via `<details>`
-
----
-
-## MapLibre Integration
-
-MapLibre GL JS is a CommonJS module. In Vite, this requires special handling:
-
-```typescript
-// vite.config.ts
-export default defineConfig({
-  resolve: {
-    alias: {
-      '@geo-editor/core': path.resolve(__dirname, '../../libs/core/src/index.ts'),
-    },
-  },
+map.on('click', (e) => {
+  onClickRef.current(snapped); // reads latest version
 });
 ```
 
-**Layer structure:**
-```
-GeoJSON Source (cluster: true, clusterMaxZoom: 14)
-  ├── pois-cluster        ← colored circles for clusters (blue → purple → pink)
-  ├── pois-cluster-count  ← abbreviated count label
-  └── pois-layer          ← individual POI circles (blue, 8px radius)
-```
-
-**Why `preserveSymlinks` was NOT used:**
-pnpm creates symlinks for workspace packages. An earlier attempt to use `preserveSymlinks: true` caused Rolldown to fail resolving `scheduler` (React internal). The solution was to rely on Vite's alias resolution directly to the TypeScript source.
-
 ---
 
-## Vite Configuration
+## Description Field
 
+The `description` field flows end-to-end:
+
+```
+<POIFormModal /> (textarea — part of @geo-editor/ui-react)
+  → handleFormSave(data: POIFormData)
+    → store.addPoint(coords, name, category, data.description)
+      → addPoiCommand(coords, name, category, description)
+        → createPoi() with description in extraProps
+          → PoiFeature.properties.description stored
+            → JSON.stringify → localStorage persisted
+```
+
+On edit, `modalInitialData` derives description from the editing POI:
 ```typescript
-// vite.config.ts
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@geo-editor/core': path.resolve(__dirname, '../../libs/core/src/index.ts'),
-    },
-  },
-});
+const modalInitialData = editingPoi ? {
+  id: String(editingPoi.id),
+  name: editingPoi.properties.name,
+  category: toCategoryId(editingPoi.properties.category),
+  lat: editingPoi.geometry.coordinates[1].toString(),
+  lng: editingPoi.geometry.coordinates[0].toString(),
+  description: editingPoi.properties.description ?? '',  // ← restored
+} : pendingCoords ? { ..., description: '' } : undefined;
 ```
 
-**Why alias instead of pnpm workspace resolution?**
-Vite resolves pnpm symlinks to their physical path before applying aliases. By pointing the alias directly to the TypeScript source, Vite transpiles the core in the same pipeline as the app — ensuring hot module replacement works and no compiled output is needed.
-
----
-
-## How to Add a Feature
-
-### Add a new store action
-
+Undo/Redo: `updatePoint()` captures `description` in `prev` snapshot:
 ```typescript
-// In poi.store.ts
-interface PoiState {
-  myNewAction: (param: string) => void;
-}
-
-// In create()
-myNewAction: (param) => {
-  // use applyCommand() if undoable, set() directly if not
-  set({ ... });
-}
-```
-
-### Add a new component
-
-```tsx
-// components/MyComponent.tsx
-import { usePoiStore } from '../store/poi.store';
-
-export function MyComponent() {
-  const { features } = usePoiStore();
-  return <div>{features().length} POIs</div>;
+updatePoint: (id, updates) => {
+  const poi = get().features().find(f => f.id === id);
+  const prev = {
+    name: poi.properties.name,
+    category: poi.properties.category,
+    description: poi.properties.description,  // ← captured for undo
+  };
+  const next = applyCommand(get().history, updatePoiCommand(id, prev, updates));
+  ...
 }
 ```
-
-No provider needed — Zustand store is a module-level singleton.
 
 ---
 
@@ -318,63 +286,45 @@ cd apps/react-app && npx vite
 cd apps/react-app && npx vite build
 # Output: apps/react-app/dist/
 
-# Docker (from monorepo root)
+# Docker
 docker compose build react-client --no-cache
 ```
 
-The Dockerfile uses `npx vite build` directly (not `nx build react-app`) to bypass Nx cache issues in CI environments:
-
-```dockerfile
-WORKDIR /app/apps/react-app
-RUN npx vite build
-```
+The Dockerfile uses `npx vite build` directly (bypassing `nx build react-app`) to avoid Nx cache issues in CI. The build context includes `libs/design-tokens` and `libs/design-system-react`.
 
 ---
 
 ## Troubleshooting
 
-### `n.features is undefined` (blank page)
-**Cause:** Component calls `collection.features` but `collection` is a function in the Zustand store.
-**Fix:** Call as function: `collection().features`.
+### POI markers not visible after restore / import
+**Cause:** `useEffect` depended on `collection` (stable function ref) instead of `history` — effect never re-ran on state changes.
+**Fix:** Use `history` as the `useEffect` dependency: `}, [history, updateData]);`
 
-### MapLibre map is blank / gray
-**Cause:** Container has no height, or `useMapLibre` effect ran before the ref was attached.
-**Fix:** Ensure the `ref` div has explicit height via CSS: `.app-layout__map { flex: 1; min-width: 0; }` and the parent is a flex container.
+### POI markers visible then disappearing immediately
+**Cause:** `updateData()` was called before `map.on('load')` fired. Guard `if (!styleLoaded.current) return` silently discarded data.
+**Fix:** `useMapLibre` now buffers data in `pendingDataRef` and flushes it inside the `load` event handler.
+
+### `n.features is undefined` (blank page)
+**Cause:** Component calls `collection.features` — `collection` is a function in the Zustand store.
+**Fix:** Always call as `collection().features`.
 
 ### `Cannot find module '@geo-editor/core'`
-**Cause:** `tsconfig.app.json` has `paths` outside `compilerOptions`, or `vite.config.ts` alias is missing.
+**Cause:** `tsconfig.app.json` has `paths` outside `compilerOptions`, or Vite alias missing.
 **Fix:**
 ```json
-// tsconfig.app.json — paths must be INSIDE compilerOptions
-{
-  "compilerOptions": {
-    "paths": { "@geo-editor/core": ["../../libs/core/src/index.ts"] }
-  }
-}
+{ "compilerOptions": { "paths": { "@geo-editor/core": ["../../libs/core/src/index.ts"] } } }
 ```
 
 ### Vite build fails: `Cannot resolve 'scheduler'`
-**Cause:** `preserveSymlinks: true` was set in `vite.config.ts`, which breaks React's internal module resolution.
-**Fix:** Remove `preserveSymlinks: true`. Use the `alias` approach instead.
+**Cause:** `preserveSymlinks: true` in `vite.config.ts` breaks React internals.
+**Fix:** Remove `preserveSymlinks`. Use alias only for `@geo-editor/core`.
 
-### Imported POIs replace existing ones instead of merging
-**Cause:** `loadCollection()` was called with only the imported features.
-**Fix:** Merge with existing:
-```typescript
-loadCollection({
-  type: 'FeatureCollection',
-  features: [...collection().features, ...result.imported],
-});
-```
+### Imported POIs replace existing ones
+**Cause:** `loadCollection()` called with only imported features.
+**Fix:** Merge: `features: [...collection().features, ...result.imported]`.
 
-### Undo/Redo not working after page reload
-**Cause:** `restore()` calls `initHistory(saved)` which resets `past[]` and `future[]`. This is by design — history is session-only.
-**Expected behavior:** History is not persisted to localStorage, only the current `present` collection is.
+### Hot reload not working for DS changes
+**Fix:** Restart Vite dev server. If persists: `rm -rf apps/react-app/node_modules/.vite`.
 
 ### `pnpm-lock.yaml` out of date in Docker
-**Cause:** Added a new dependency to `package.json` without running `pnpm install`.
-**Fix:** Always run `pnpm install` from the monorepo root after changing any `package.json`, then commit the updated lock file.
-
-### Hot reload not working for `@geo-editor/core` changes
-**Cause:** Vite watches the aliased source path — if the core file is saved, Vite should HMR automatically.
-**Fix:** If not working, restart the dev server. Ensure no `.vite` cache is stale: `rm -rf apps/react-app/node_modules/.vite`.
+**Fix:** Run `pnpm install` from monorepo root after any `package.json` change, commit updated lockfile.

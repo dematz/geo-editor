@@ -1,9 +1,7 @@
 # ⚙️ Core Library — `@geo-editor/core`
 
 > Part of the [`geo-editor`](../../README.md) monorepo.
-> Pure TypeScript — zero framework dependencies.
-
-This library contains all business logic shared between the Angular and React apps. It is intentionally framework-agnostic: no Angular, React, RxJS, or browser APIs (except `localStorage` in the infrastructure layer).
+> Pure TypeScript — zero framework dependencies. Zero browser API usage in use-cases.
 
 ---
 
@@ -19,18 +17,19 @@ This library contains all business logic shared between the Angular and React ap
 8. [Infrastructure](#infrastructure)
 9. [Testing](#testing)
 10. [How to Extend](#how-to-extend)
-11. [Troubleshooting](#troubleshooting)
+11. [Pending Refactors](#pending-refactors)
+12. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Design Principles
 
-- **No framework imports** — `libs/core` must never import from `@angular/*`, `react`, or any UI library.
-- **No `any`** — strict TypeScript (`strict: true`, `noImplicitAny: true`, `noUnusedLocals: true`).
-- **Pure functions** — use-cases are pure: same input → same output, no side effects.
-- **Immutability** — all collection mutations return new objects; originals are never modified.
-- **Interface-driven** — `IPoiRepository` allows swapping storage without changing use-cases.
-- **Testable in Node** — no browser APIs in use-cases (only in `infrastructure/`).
+- **No framework imports** — never import from `@angular/*`, `react`, or UI libraries
+- **No `any`** — strict TypeScript (`strict: true`, `noImplicitAny`, `noUnusedLocals`)
+- **Pure functions** — same input → same output, no side effects in use-cases
+- **Immutability** — all mutations return new objects; originals never modified
+- **Interface-driven** — `IPoiRepository` allows swapping storage without touching use-cases
+- **Node-testable** — no browser APIs in use-cases (only in `infrastructure/`)
 
 ---
 
@@ -39,64 +38,72 @@ This library contains all business logic shared between the Angular and React ap
 ```
 libs/core/src/
 ├── domain/
-│   ├── geojson.types.ts         ← LngLat, PoiFeature, PoiFeatureCollection
-│   ├── validation.types.ts      ← ValidationError, ImportResult
+│   ├── geojson.types.ts         ← LngLat, PoiFeature, PoiProperties (incl. description?)
+│   ├── validation.types.ts      ← ValidationError, ValidationErrorReason, ImportResult
 │   ├── repository.interface.ts  ← IPoiRepository
-│   └── index.ts                 ← barrel export
+│   └── index.ts
 │
 ├── use-cases/
 │   ├── poi.use-cases.ts         ← createPoi, addPoi, updatePoi, deletePoi, emptyCollection
 │   │
 │   ├── validators/
-│   │   └── geojson.validator.ts ← validateFeatureCollection (main import pipeline)
+│   │   └── geojson.validator.ts ← validateFeatureCollection — main import pipeline
 │   │
 │   ├── ai-smart-fixer/
-│   │   ├── category-inference.ts  ← inferCategory (pattern matching)
-│   │   ├── coordinate-repair.ts   ← repairCoordinates (swap detection)
+│   │   ├── category-inference.ts  ← inferCategory (11 pattern rules)
+│   │   ├── coordinate-repair.ts   ← repairCoordinates (swap detection heuristic)
 │   │   └── smart-fixer.ts         ← applySmartFixer, applySmartFixerToCollection
 │   │
 │   ├── history/
-│   │   ├── command.types.ts     ← Command interface, HistoryState, applyCommand, undo, redo
-│   │   └── poi.commands.ts      ← addPoiCommand, removePoiCommand, updatePoiCommand, loadCollectionCommand
+│   │   ├── command.types.ts     ← Command, HistoryState, applyCommand, undo, redo
+│   │   └── poi.commands.ts      ← addPoiCommand (description?), removePoiCommand,
+│   │                               updatePoiCommand (description), loadCollectionCommand
 │   │
 │   ├── search/
-│   │   └── poi-filter.ts        ← filterPois (by name query and categories)
+│   │   └── poi-filter.ts        ← filterPois by query and categories
 │   │
 │   ├── snap/
-│   │   └── snap.ts              ← snapToGrid (coordinate rounding)
+│   │   └── snap.ts              ← snapToGrid (4 decimal places default)
 │   │
-│   └── index.ts                 ← barrel export (all use-cases)
+│   └── index.ts                 ← barrel export (all use-cases + types)
 │
 ├── infrastructure/
-│   ├── local-storage.repository.ts ← LocalStoragePoiRepository (implements IPoiRepository)
-│   └── index.ts
+│   ├── local-storage.repository.ts ← LocalStoragePoiRepository (IPoiRepository)
+│   └── index.ts                    ← createPoiRepository() factory
 │
-└── index.ts                     ← root barrel (domain + use-cases + infrastructure)
+└── index.ts                     ← root barrel
 ```
 
 ---
 
 ## Domain Types
 
-### `LngLat`
+### `PoiProperties`
+
 ```typescript
-interface LngLat {
-  readonly lng: number;
-  readonly lat: number;
+interface PoiProperties {
+  name:         string;
+  category:     string;
+  description?: string;  // optional free-text — persisted via JSON.stringify
+  [key: string]: string | number | boolean | null | undefined;
 }
 ```
 
+The index signature includes `undefined` to accommodate the optional `description` field without TypeScript errors on spread operations.
+
 ### `PoiFeature`
+
 ```typescript
 interface PoiFeature {
   type: 'Feature';
   geometry: { type: 'Point'; coordinates: [number, number] }; // [lon, lat]
-  properties: PoiProperties;  // { name: string; category: string; [key]: ... }
+  properties: PoiProperties;
   id?: string | number;
 }
 ```
 
 ### `IPoiRepository`
+
 ```typescript
 interface IPoiRepository {
   save(data: PoiFeatureCollection): Promise<void>;
@@ -105,13 +112,16 @@ interface IPoiRepository {
 }
 ```
 
+`LocalStoragePoiRepository` serializes the full `FeatureCollection` with `JSON.stringify`. All `PoiProperties` fields — including `description` — persist automatically.
+
 ### `ImportResult`
+
 ```typescript
 interface ImportResult {
   imported:       PoiFeature[];
   errors:         ValidationError[];
   totalProcessed: number;
-  summary:        string; // "Importadas 28 / Descartadas 3 (2 coord. inválidas, 1 sin name)"
+  summary:        string; // "Importadas 28 / Descartadas 3 · IA: 2 categorías inferidas"
 }
 ```
 
@@ -121,74 +131,56 @@ interface ImportResult {
 
 ### POI CRUD (`poi.use-cases.ts`)
 
-All functions are **pure** — they return new objects and never mutate inputs.
+All functions are **pure** — return new objects, never mutate inputs.
 
 ```typescript
-// Create a new POI Feature
 createPoi(coords: LngLat, name: string, category: string, extraProps?): PoiFeature
 
-// Add POI to collection (returns new collection)
-addPoi(collection: PoiFeatureCollection, poi: PoiFeature): PoiFeatureCollection
+addPoi(collection, poi): PoiFeatureCollection
 
-// Update POI properties (returns new collection)
-updatePoi(collection, id, updates: Partial<{name, category}>): PoiFeatureCollection
+// description included in updates
+updatePoi(
+  collection,
+  id,
+  updates: Partial<{ name: string; category: string; description: string }>
+): PoiFeatureCollection
 
-// Remove POI (returns new collection)
-deletePoi(collection: PoiFeatureCollection, id: string | number): PoiFeatureCollection
+deletePoi(collection, id): PoiFeatureCollection
 
-// Create empty collection
 emptyCollection(): PoiFeatureCollection
 ```
 
 ### GeoJSON Validator (`validators/geojson.validator.ts`)
 
-The main import pipeline. Validates a raw unknown value against GeoJSON Point FeatureCollection rules:
+Validation pipeline with inline AI Smart Fixer:
 
-```typescript
-validateFeatureCollection(raw: unknown): ImportResult
+```
+1. Root is FeatureCollection?
+2. features is array?
+3. Each feature: type = 'Feature'?
+4. geometry exists and is Point?
+5. coordinates is 2-element array?
+6. ── AI Smart Fixer: repairCoordinates() BEFORE range check ──
+7. [lon, lat] in WGS84 range?
+8. properties exists?
+9. properties.name is non-empty string?
+10. ── AI Smart Fixer: inferCategory() if missing/other ──
+11. Import feature
 ```
 
-**Validation rules (in order):**
-1. Root must be `{ type: 'FeatureCollection', features: [] }`
-2. Each feature must have `type: 'Feature'`
-3. `geometry` must exist and be `{ type: 'Point' }`
-4. Coordinates must be a 2-element array
-5. **Smart Fixer: attempt coordinate repair before range check**
-6. `[lon, lat]` must be in WGS84 range (`lon ∈ [-180,180]`, `lat ∈ [-90,90]`)
-7. `properties` must exist
-8. `properties.name` must be a non-empty string
-9. **Smart Fixer: infer category if missing or `'other'`**
-
-The AI Smart Fixer runs **inline during validation** — not as a post-processing step — allowing it to rescue features that would otherwise be discarded.
-
-### Search / Filter (`search/poi-filter.ts`)
-
-```typescript
-filterPois(features: PoiFeature[], options: FilterOptions): PoiFeature[]
-
-interface FilterOptions {
-  query?:      string;    // case-insensitive name search
-  categories?: string[];  // exact category match
-}
-```
-
-Both filters are combined with AND logic. Does not mutate input array.
+The fixer runs **inline** (not post-processing) to rescue features that would otherwise be discarded by step 6 (swapped coordinates) or step 10 (missing category).
 
 ---
 
 ## AI Smart Fixer
 
-### Category Inference (`ai-smart-fixer/category-inference.ts`)
-
-Pattern-based, fully offline — no external API.
+### Category Inference
 
 ```typescript
 inferCategory(name: string): string | null
 ```
 
-**Supported categories and trigger patterns:**
-
-| Category | Patterns |
+| Category | Trigger patterns |
 |---|---|
 | `cafe` | starbucks, coffee, café, espresso, brew |
 | `restaurant` | restaurant, burger, pizza, sushi, grill, bistro, food |
@@ -201,19 +193,17 @@ inferCategory(name: string): string | null
 | `shop` | mall, centro comercial, shop, tienda, store, market |
 | `landmark` | church, iglesia, cathedral, catedral, mosque, mezquita |
 
-Returns `null` if no pattern matches.
+Returns `null` if no pattern matches — feature falls back to `'other'`.
 
-### Coordinate Repair (`ai-smart-fixer/coordinate-repair.ts`)
-
-Detects and fixes swapped `[lat, lon]` coordinates stored as `[lon, lat]`.
+### Coordinate Repair
 
 ```typescript
 repairCoordinates(coords: [number, number]): CoordRepairResult
 ```
 
-**Heuristic:** If `|a| <= 90` (fits lat range) AND `|b| > 90` (can only be longitude), the coordinates are considered swapped and repaired.
+**Heuristic:** if `|a| ≤ 90` AND `|b| > 90`, then `a` is latitude and `b` is longitude (stored in wrong order) — swap them.
 
-**Limitation:** If both values fit within `[-90, 90]` (e.g. Colombian coordinates `[-74, 4.7]`), the case is ambiguous and left unchanged. Geographic context would be needed to resolve this.
+**Limitation:** if both values fit within `[-90, 90]` (e.g. Colombian coordinates `[-74, 4.7]`), the case is ambiguous and left unchanged.
 
 ---
 
@@ -229,59 +219,52 @@ interface Command {
 }
 ```
 
-### `HistoryState`
+### Built-in commands
 
 ```typescript
-interface HistoryState {
-  past:    PoiFeatureCollection[];  // capped at 50
-  present: PoiFeatureCollection;
-  future:  PoiFeatureCollection[];
-}
-```
+// description? is passed to createPoi() via extraProps
+addPoiCommand(coords, name, category, description?): Command
 
-### Core functions
+// description included in prev/next for correct undo semantics
+updatePoiCommand(
+  id,
+  prev: Partial<{ name, category, description }>,
+  next: Partial<{ name, category, description }>
+): Command
 
-```typescript
-initHistory(initial: PoiFeatureCollection): HistoryState
-applyCommand(history: HistoryState, command: Command): HistoryState
-undoHistory(history: HistoryState): HistoryState
-redoHistory(history: HistoryState): HistoryState
-canUndo(history: HistoryState): boolean
-canRedo(history: HistoryState): boolean
-```
-
-### Built-in Commands
-
-```typescript
-addPoiCommand(coords, name, category): Command
-removePoiCommand(poi: PoiFeature): Command
-updatePoiCommand(id, prev, next): Command
+removePoiCommand(poi): Command
 loadCollectionCommand(prev, next): Command
 ```
 
-**History behavior:**
-- Every `applyCommand` pushes `present` to `past` and clears `future`
-- `undoHistory` pops from `past`, pushes `present` to `future`
-- `redoHistory` pops from `future`, pushes `present` to `past`
-- `past` is capped at 50 entries (oldest are dropped)
+### History behavior
+
+```
+applyCommand(history, cmd):
+  → push present to past (capped at 50)
+  → execute cmd on present → new present
+  → clear future
+
+undoHistory(history):
+  → pop last from past → new present
+  → push old present to future
+
+redoHistory(history):
+  → pop first from future → new present
+  → push old present to past
+```
+
+**Description and undo/redo:** The `updatePoiCommand` captures `description` in both `prev` and `next`. Undoing a description edit restores the previous description correctly.
 
 ---
 
 ## Grid Snapping
 
 ```typescript
-snapToGrid(lng: number, lat: number, options?: SnapOptions): { lng: number; lat: number }
-
-interface SnapOptions {
-  precision?: number; // decimal places, default: 4 (~11m precision at equator)
-}
+snapToGrid(lng: number, lat: number, options?: { precision?: number }): { lng, lat }
 ```
 
-**Precision reference:**
-
-| Decimals | Precision |
+| Precision | ~Distance |
 |---|---|
-| 1 | ~11 km |
 | 2 | ~1.1 km |
 | 3 | ~110 m |
 | **4 (default)** | **~11 m** |
@@ -293,92 +276,70 @@ interface SnapOptions {
 
 ### `LocalStoragePoiRepository`
 
-Implements `IPoiRepository` using browser `localStorage`.
-
 ```typescript
 class LocalStoragePoiRepository implements IPoiRepository {
   private readonly STORAGE_KEY = 'poi_editor_state';
-  async save(data: PoiFeatureCollection): Promise<void>
-  async getAll(): Promise<PoiFeatureCollection | null>
-  async clear(): Promise<void>
 }
 ```
 
 **Error handling:**
-- `save()` — catches `QuotaExceededError` and rethrows with a human-readable message
-- `getAll()` — catches `JSON.parse` errors (corrupt data), clears the key, and returns `null`
+- `save()` — catches `QuotaExceededError`, rethrows with human-readable message
+- `getAll()` — catches corrupt JSON, clears key, returns `null` (safe degradation)
 
-**Factory function:**
-```typescript
-// Preferred way to instantiate — enables easy mocking in tests
-createPoiRepository(): IPoiRepository
-```
-
-> This class is **excluded from test coverage** because it requires browser `localStorage` API not available in Node.js vitest environment.
+**Description persistence:** `JSON.stringify` serializes all `PoiProperties` fields including `description`. No changes to the repository were needed to support the new field — the interface is property-agnostic.
 
 ---
 
 ## Testing
 
 ```bash
-# Run all tests
-cd libs/core && pnpm vitest run
-
-# Run with HTML coverage report
-cd libs/core && pnpm vitest run --coverage
-# Report saved to: libs/core/coverage/
-
-# Watch mode
-cd libs/core && pnpm vitest
+cd libs/core
+pnpm vitest run              # run once
+pnpm vitest run --coverage   # with HTML coverage report
+pnpm vitest                  # watch mode
 ```
 
-### Test files
+### Coverage
 
-| File | Tests | Coverage |
-|---|---|---|
-| `poi.use-cases.spec.ts` | 14 | 100% |
-| `geojson.validator.spec.ts` | 11 | 90% |
-| `smart-fixer.spec.ts` | 14 | 100% |
-| `command.spec.ts` | 12 | 100% |
-| `poi.commands.spec.ts` | 7 | 100% |
-| `poi-filter.spec.ts` | 9 | 100% |
-| `snap.spec.ts` | 4 | 100% |
-| **Total** | **71** | **96%** |
+```
+Test Files : 7 passed
+Tests      : 71 passed
 
-### Writing a new test
-
-```typescript
-import { describe, it, expect } from 'vitest';
-import { myFunction } from '../my-module';
-
-describe('myFunction', () => {
-  it('does the expected thing', () => {
-    const result = myFunction(input);
-    expect(result).toEqual(expected);
-  });
-});
+File                        | Stmts | Branch | Funcs |
+----------------------------|-------|--------|-------|
+poi.use-cases.ts            | 100%  | 100%   | 100%  |
+geojson.validator.ts        |  90%  |  88%   | 100%  |
+category-inference.ts       | 100%  | 100%   | 100%  |
+coordinate-repair.ts        | 100%  | 100%   | 100%  |
+smart-fixer.ts              | 100%  | 100%   | 100%  |
+command.types.ts            | 100%  | 100%   | 100%  |
+poi.commands.ts             | 100%  | 100%   | 100%  |
+poi-filter.ts               | 100%  | 100%   | 100%  |
+snap.ts                     | 100%  | 100%   | 100%  |
+Overall                     |  96%  |  95%   |  91%  |
 ```
 
-Place the file in `__tests__/` next to the module being tested.
+`infrastructure/` excluded — requires browser `localStorage` API unavailable in Node.js.
 
 ---
 
 ## How to Extend
 
+### Add a new POI property (e.g. `phone`)
+
+1. `domain/geojson.types.ts` — add `phone?: string` to `PoiProperties`
+2. `use-cases/poi.use-cases.ts` — add `phone` to `updatePoi` updates type
+3. `use-cases/history/poi.commands.ts` — add `phone` to `addPoiCommand` and `updatePoiCommand`
+4. No changes to `LocalStoragePoiRepository` — serializes all properties automatically
+
 ### Add a new repository (e.g. HTTP API)
 
 ```typescript
-// libs/core/src/infrastructure/http.repository.ts
-import type { IPoiRepository, PoiFeatureCollection } from '../domain';
-
 export class HttpPoiRepository implements IPoiRepository {
   constructor(private readonly baseUrl: string) {}
 
   async save(data: PoiFeatureCollection): Promise<void> {
-    await fetch(`${this.baseUrl}/pois`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    await fetch(`${this.baseUrl}/pois`, { method: 'PUT', body: JSON.stringify(data) });
   }
 
   async getAll(): Promise<PoiFeatureCollection | null> {
@@ -392,62 +353,53 @@ export class HttpPoiRepository implements IPoiRepository {
 }
 ```
 
-No changes needed in use-cases, services, or components.
+Zero changes to use-cases, services, or UI components.
 
-### Add a new Command
+---
 
-```typescript
-// libs/core/src/use-cases/history/poi.commands.ts
-export function movePoiCommand(id: string | number, from: LngLat, to: LngLat): Command {
-  return {
-    description: `Move POI to [${to.lng}, ${to.lat}]`,
-    execute: (state) => /* update coordinates */,
-    undo:    (state) => /* restore original coordinates */,
-  };
-}
-```
+## Pending Refactors
 
-Then export from `use-cases/index.ts`.
+### `CategoryId` centralization (recommended before adding categories)
 
-### Add a new category to AI Smart Fixer
+**Current state:** `CategoryId` type is duplicated in two places:
+- `libs/design-system-react/src/utils/poi-types.ts`
+- `libs/design-system-angular/src/utils/category-types.ts`
+
+Both apps maintain their own `categoryMap.ts` to bridge between core's open `string` and the DS's restricted union type.
+
+**Recommended:** Move `CategoryId` and `CATEGORY_IDS` array to `libs/core/src/domain/`:
 
 ```typescript
-// libs/core/src/use-cases/ai-smart-fixer/category-inference.ts
-const RULES: CategoryRule[] = [
-  // ... existing rules ...
-  { patterns: [/beach|playa|surf|ocean/i], category: 'beach' },
-];
+// libs/core/src/domain/category.types.ts
+export type CategoryId = 'restaurant' | 'hotel' | 'park' | 'hospital' | 'custom';
+export const CATEGORY_IDS: CategoryId[] = ['restaurant', 'hotel', 'park', 'hospital', 'custom'];
 ```
 
-No other changes needed.
+**What stays in each layer:**
+- `design-tokens` — CSS color variables per category (`--ds-cat-restaurant`)
+- `design-system-react/angular` — icons, color constants, labels (import `CategoryId` from core)
+- `apps` — category-to-icon/color mappings for the specific DS
+
+**Impact:** 5 files, low risk, zero functional change. Run before adding any new category.
 
 ---
 
 ## Troubleshooting
 
 ### `noUnusedLocals` build error in Docker
-**Cause:** A test file imports something that isn't used.
-**Fix:** Remove unused imports. TypeScript's `strict: true` enforces this in the core build.
+**Cause:** Test file imports something unused.
+**Fix:** Remove the unused import. TypeScript `strict: true` enforces this during `tsc -p tsconfig.json`.
 
-### `localStorage` not available in tests
-**Cause:** Vitest runs in Node environment, not browser.
-**Fix:** This is expected. `LocalStoragePoiRepository` is excluded from test coverage via `vitest.config.ts`:
-```typescript
-coverage: {
-  exclude: ['src/infrastructure/**'],
-}
-```
-Mock the repository in integration tests if needed.
-
-### `Cannot find module '@geo-editor/core'`
-**Cause:** The consuming app's `tsconfig` or Vite alias doesn't point to `libs/core/src/index.ts`.
-**Fix for Angular:** Add to `tsconfig.app.json` `compilerOptions.paths`.
-**Fix for React:** Add to `vite.config.ts` `resolve.alias`.
+### `localStorage` errors in tests
+**Expected behavior:** `LocalStoragePoiRepository` is excluded from test coverage because vitest runs in Node.js without browser APIs.
 
 ### Coordinate repair not triggering for Colombian coordinates
-**Cause:** Both `[-74, 4.7]` values fit within `[-90, 90]` — the heuristic cannot determine which is lat and which is lon without geographic context.
-**Expected behavior:** Ambiguous cases are left unchanged. This is documented in Known Limitations.
+**Expected behavior:** `[-74, 4.7]` — both values fit within `[-90, 90]`. Heuristic cannot determine swap direction without geographic context. Documented in Known Limitations.
 
-### Tests pass locally but fail in Docker (TypeScript errors)
-**Cause:** Test files have unused imports that `noUnusedLocals` catches during `tsc -p tsconfig.json`.
-**Fix:** Vitest does not run `tsc` — it transpiles only. The Docker build runs `tsc` explicitly. Always run `cd libs/core && npx tsc --noEmit` before committing.
+### Tests pass locally but fail in Docker
+**Cause:** Test files have unused imports caught by `tsc` (but not vitest transpiler).
+**Fix:** Always run `cd libs/core && npx tsc --noEmit` before committing.
+
+### `description` not persisting after restart
+**Cause:** `updatePoint()` called without passing `description` in updates.
+**Fix:** Ensure the calling layer (App or store) passes `description: data.description` in the updates object.

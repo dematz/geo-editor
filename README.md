@@ -1,9 +1,9 @@
 # 🗺️ Advanced Geo-Editor POI
 
 > **Author:** Dennis Mauricio Martinez Suarez — Lead Frontend Developer
-> **Stack:** Angular 18 · React 19 · TypeScript 5 · MapLibre GL JS · Nx Monorepo · pnpm workspaces
+> **Stack:** Angular 18 · React 19 · TypeScript 5 · MapLibre GL JS · Nx Monorepo · pnpm workspaces · CSS-first Design System
 
-A production-ready Point of Interest (POI) editor built with a **framework-agnostic core architecture**, dual-framework UI (Angular + React), AI-powered import validation, Command-pattern Undo/Redo, and full Docker support.
+A production-ready Point of Interest (POI) editor built with a **framework-agnostic core architecture**, dual-framework UI (Angular + React), a shared CSS-first design system, AI-powered import validation, Command-pattern Undo/Redo, and full Docker support.
 
 ---
 
@@ -12,9 +12,10 @@ A production-ready Point of Interest (POI) editor built with a **framework-agnos
 | Module | README |
 |---|---|
 | 🌐 **This file** — Global architecture, quick start, ADRs | `README.md` |
-| 🔴 **Angular App** — Signals, services, standalone components | [`apps/angular-app/README.md`](apps/angular-app/README.md) |
-| 🔵 **React App** — Zustand store, hooks, Vite | [`apps/react-app/README.md`](apps/react-app/README.md) |
-| ⚙️ **Core Library** — Domain types, use-cases, validators | [`libs/core/README.md`](libs/core/README.md) |
+| 🔴 **Angular App** — Signals, DS integration, MapLibre buffering, troubleshooting | [`apps/angular-app/README.md`](apps/angular-app/README.md) |
+| 🔵 **React App** — Zustand, DS integration, Vite alias, troubleshooting | [`apps/react-app/README.md`](apps/react-app/README.md) |
+| ⚙️ **Core Library** — Domain types, use-cases, validators, history, pending refactors | [`libs/core/README.md`](libs/core/README.md) |
+| 📋 **Changelog** — Bugs fixed, features added, technical analysis | [`CHANGELOG.md`](CHANGELOG.md) |
 
 ---
 
@@ -46,9 +47,7 @@ pnpm nx serve react-app
 ### With Docker
 
 ```bash
-# Build and start both apps
 docker compose up --build
-
 # Angular → http://localhost:4200
 # React   → http://localhost:3001
 ```
@@ -60,24 +59,39 @@ docker compose up --build
 ```
 geo-editor/
 ├── apps/
-│   ├── angular-app/          ← Angular 18 (standalone components + Signals)
-│   └── react-app/            ← React 19 (Zustand + Vite)
+│   ├── angular-app/              ← Angular 18 (standalone + Signals + @geo-editor/ui-angular)
+│   └── react-app/                ← React 19 (Zustand + Vite + @geo-editor/ui-react)
+│
 ├── libs/
-│   └── core/                 ← Framework-agnostic business logic (TypeScript only)
-│       └── src/
-│           ├── domain/       ← Interfaces: PoiFeature, LngLat, IPoiRepository
-│           ├── use-cases/
-│           │   ├── validators/      ← GeoJSON validation engine
-│           │   ├── ai-smart-fixer/  ← Category inference + coordinate repair
-│           │   ├── history/         ← Command pattern (Undo/Redo, 50 steps)
-│           │   ├── search/          ← POI filter by name and category
-│           │   └── snap/            ← Grid snapping for map clicks
-│           └── infrastructure/      ← LocalStoragePoiRepository
+│   ├── core/                     ← Framework-agnostic business logic (TypeScript only)
+│   │   └── src/
+│   │       ├── domain/           ← PoiFeature, LngLat, PoiProperties (incl. description?)
+│   │       ├── use-cases/
+│   │       │   ├── validators/   ← GeoJSON validation + AI Smart Fixer (inline, pre-validation)
+│   │       │   ├── history/      ← Command pattern (Undo/Redo, 50 steps, description support)
+│   │       │   ├── search/       ← POI filter by name and category
+│   │       │   └── snap/         ← Grid snapping for map clicks (4 decimal default)
+│   │       └── infrastructure/   ← LocalStoragePoiRepository
+│   │
+│   ├── design-tokens/            ← @geo-editor/tokens — CSS custom properties (--ds-*)
+│   │   └── src/
+│   │       ├── tokens/           ← colors (oklch), typography (Inter), spacing (4px base), animations
+│   │       └── styles/           ← reset, utilities, maplibre overrides
+│   │
+│   ├── design-system-react/      ← @geo-editor/ui-react — React components + CSS Modules + Storybook
+│   │   └── src/components/       ← Button, Input, Select, Textarea, Label, CategoryChip,
+│   │                                POIItem, TopBar, Sidebar, POIFormModal
+│   │
+│   └── design-system-angular/    ← @geo-editor/ui-angular — Angular standalone + ViewEncapsulation.None
+│       └── src/components/       ← DsButton, DsInput, DsSelect, DsTextarea, DsLabel,
+│                                    DsCategoryChip, DsPoiItem, DsTopBar, DsSidebar,
+│                                    DsPoiFormModal, DsIcon (inline SVG, no external dep)
+│
+├── CHANGELOG.md                  ← Technical changelog with bug analysis and refactor recommendations
 ├── docker-compose.yml
 ├── lighthouserc.yml
 ├── nx.json
-├── pnpm-workspace.yaml
-└── README.md
+└── pnpm-workspace.yaml
 ```
 
 ---
@@ -87,200 +101,205 @@ geo-editor/
 ### Core MVP
 | Feature | Description |
 |---|---|
-| 🗺️ Map base | MapLibre GL JS with OpenStreetMap tiles — no API key required |
-| 📂 Import GeoJSON | Validates, reports errors, imports only valid Point features |
-| 📍 Create POIs | Click anywhere on the map to place a point |
-| ✏️ Edit / Delete | Inline form with name, category fields and delete confirmation |
+| 🗺️ Map | MapLibre GL JS + OSM tiles — no API key required, attribution visible |
+| 📂 Import GeoJSON | Validates, reports errors per-feature, AI Smart Fixer auto-corrects where possible |
+| 📍 Create POIs | Click map → modal with name, category, description, coordinates pre-filled |
+| ✏️ Edit / Delete | Full CRUD via modal form — description restored on edit |
+| 📝 Description field | Optional free-text, persisted to localStorage, restored on edit, tracked in undo/redo |
 | 💾 Persistence | Auto-saved to `localStorage` key `poi_editor_state`, restored on load |
-| 📤 Export | Download current state as `.geojson` file |
+| 📤 Export | Download current state as `.geojson` |
 | 🔍 Search | Real-time filter by name in the sidebar list |
-| 🔵 Clustering | Native MapLibre cluster layers for dense datasets |
+| 🔵 Clustering | Native MapLibre cluster layers (auto at zoom < 14) |
 
 ### Advanced Features
 | Feature | Description |
 |---|---|
-| ↩ Undo / Redo | Command pattern with 50-step history across all mutations |
-| 🤖 AI Smart Fixer | Auto-infers missing categories from POI names; repairs swapped lat/lon |
-| 📊 Import report | Detailed banner: imported count, discarded count with reasons, AI fixes applied |
-| 📐 Grid snapping | Map click coordinates snapped to 4-decimal grid (~11m precision) |
+| ↩ Undo / Redo | Command pattern, 50-step history — all mutations including description edits |
+| 🤖 AI Smart Fixer | Runs inline during validation — infers missing categories, repairs swapped lat/lon |
+| 📊 Import report | Detailed banner: imported/discarded counts with per-reason breakdown + AI fixes applied |
+| 📐 Grid snapping | Map clicks snapped to 4-decimal grid (~11m precision), configurable |
+| 🎨 Design System | Shared token-based UI — same visual language across Angular and React |
+
+---
+
+## 🎨 Design System Architecture
+
+```
+@geo-editor/tokens          ← Layer 1: CSS custom properties only (--ds-*)
+         ↓
+@geo-editor/ui-react        ← Layer 2a: React components (CSS Modules + tokens)
+@geo-editor/ui-angular      ← Layer 2b: Angular standalone (ViewEncapsulation.None + tokens)
+         ↓
+apps/react-app              ← Layer 3: Consuming DS components
+apps/angular-app            ← Layer 3: Consuming DS components
+```
+
+### Token categories
+
+| Group | Example tokens | Purpose |
+|---|---|---|
+| Colors | `--ds-primary`, `--ds-foreground`, `--ds-topbar`, `--ds-cat-restaurant` | Brand, semantic, POI categories |
+| Typography | `--ds-font-sans` (Inter), `--ds-text-base` (14px) | Font, size scale (1.2 ratio), weights, tracking |
+| Spacing | `--ds-space-4` (16px) | 4px base grid, 16 steps |
+| Radius | `--ds-radius-md` (8px), `--ds-radius-full` | Border radius scale |
+| Shadows | `--ds-shadow-modal`, `--ds-shadow-topbar` | Elevation system |
+| Z-index | `--ds-z-topbar` (30), `--ds-z-modal` (50) | Deterministic stacking order |
+| Transitions | `--ds-duration-fast` (100ms), `--ds-ease-out` | Animation timing |
+| Components | `--ds-topbar-height` (56px), `--ds-sidebar-width` (280px) | Domain-specific dimensions |
+| Dark mode | `.dark` class on `<html>` | Full theme override via same token names |
+
+### Design System — Angular-specific rules
+
+All Angular DS components use `ViewEncapsulation.None` — no shadow DOM. This requires different CSS selector patterns:
+
+```css
+/* ❌ No effect without shadow DOM */
+:host ds-button.newBtn { width: 100%; }
+
+/* ✅ Target from nearest ancestor class, then inner .button */
+.newBtnWrapper ds-button { display: flex; width: 100%; }
+.newBtnWrapper ds-button .button { width: 100%; justify-content: center; }
+```
+
+`DsInputComponent`, `DsSelectComponent`, `DsTextareaComponent` implement Angular's `ControlValueAccessor` — compatible with `[(ngModel)]` and `formControlName` out of the box.
+
+`DsIconComponent` renders SVG inline — zero external icon library dependency, eliminating ~50KB from the bundle.
+
+### Design System — Build strategy
+
+Tokens and UI libs are processed **at build time**, not mounted as runtime volumes:
+
+```dockerfile
+# Angular Dockerfile — only what Angular needs
+COPY libs/design-tokens          ./libs/design-tokens
+COPY libs/design-system-angular  ./libs/design-system-angular
+
+# React Dockerfile — only what React needs
+COPY libs/design-tokens          ./libs/design-tokens
+COPY libs/design-system-react    ./libs/design-system-react
+```
+
+CSS from tokens ends up inlined in each app's final bundle. Nginx serves pure static files with no knowledge that a design system existed.
 
 ---
 
 ## 🏛️ Architecture Decision Records (ADR)
 
 ### ADR-1 — Nx Monorepo with pnpm workspaces
-Angular and React share `@geo-editor/core` without any code duplication. Each app imports domain types, validators, and use-cases from the same TypeScript source. pnpm workspaces handle cross-package symlinks automatically.
+Angular and React share `@geo-editor/core` without code duplication. Nx handles build graph, caching, and affected project detection. pnpm workspaces resolve cross-package symlinks.
 
-**Trade-off:** Slightly more complex initial setup vs. maintaining two separate repos that diverge over time.
+**Trade-off:** In Docker, Nx project graph requires all `tsconfig.json` files referenced via `extends` to be present in the build context. Missing files cause `Failed to process project graph`. Fix: run `pnpm nx reset` in Dockerfile before build, and ensure root `tsconfig.json` is copied.
 
 ### ADR-2 — Framework-agnostic Core (`libs/core`)
-`libs/core` has zero framework dependencies — pure TypeScript with no imports of Angular, React, or any UI library. All business logic (validation, CRUD, undo/redo, AI fixer, snapping) is tested independently.
+Zero framework dependencies — pure TypeScript. All business logic (validation, CRUD, undo/redo, AI fixer, snapping, description field) is tested independently from any UI framework.
 
-**Trade-off:** Requires a thin adapter layer in each app (service in Angular, store in React) but enables complete reuse and framework-independent testing.
+**Trade-off:** Requires a thin adapter layer in each app (service in Angular, store in React). Type widening at the boundary (`string` in core → `CategoryId` union in DS) is handled by `categoryMap.ts` in each app.
 
-### ADR-3 — Angular Signals (no NgRx)
-Angular 18 Signals provide fine-grained reactivity without Zone.js overhead. `PoiService` exposes `computed()` signals for `collection`, `filteredFeatures`, `canUndo`, and `canRedo`. The template reacts automatically with zero manual subscriptions or `async` pipes.
+### ADR-3 — CSS-First Design Tokens (no JS tokens)
+Tokens are CSS custom properties only — no JavaScript token objects, no runtime theme provider. Both frameworks consume the same `index.css`. Dark mode via `.dark` class on `<html>`.
 
-**Trade-off:** Signals are a newer API (Angular 17+). Team members familiar only with RxJS/NgRx will need a learning curve.
+**Trade-off:** No TypeScript-level type-safety on token names. Convention enforced by code review, not compiler.
 
-### ADR-4 — Zustand (no Redux/Recoil)
-React state is managed with Zustand — minimal boilerplate, no provider wrapping, computed values as plain functions. The store mirrors `PoiService` from Angular, making cross-framework feature parity easy to maintain.
+### ADR-4 — Separate DS libs per framework (`ui-react` / `ui-angular`)
+A single combined lib risks cross-framework imports and complicates the Nx build graph. Separate libs allow independent Storybook instances, isolated bundle analysis, and guarantee Angular's bundle never includes React code.
 
-**Trade-off:** Zustand's lack of strict immutability enforcement requires discipline. Immer middleware can be added if needed.
+**Trade-off:** Component API must be kept in sync manually between both libs. Addressed by the `CategoryId` centralization pending refactor.
 
-### ADR-5 — MapLibre GL JS
-Open-source fork of Mapbox GL JS with no API key, no usage limits, and no vendor lock-in. OSM raster tiles serve as the base layer. Clustering is handled natively via `cluster: true` on the GeoJSON source.
+### ADR-5 — Angular Signals + `effect()` in constructor
+`PoiService` uses `signal()` and `computed()` for all reactive state. `MapComponent` registers `effect()` calls in the **constructor**, not in `ngAfterViewInit`.
 
-**Trade-off:** MapLibre is a CommonJS module which causes Vite/Rolldown warnings. Mitigated via `allowedCommonJsDependencies` in Angular and `optimizeDeps` in Vite.
+**Critical:** `effect()` requires an active injection context. Calling it in `ngAfterViewInit` silently fails — the effect is never registered and map updates stop working. This was the root cause of the POI markers not rendering bug.
 
-### ADR-6 — Command Pattern for Undo/Redo
-Each mutation (add, update, remove, load) is a `Command` object with `execute()` and `undo()` methods. `HistoryState` holds `past[]`, `present`, and `future[]` — a pure functional implementation with no side effects. History is capped at 50 steps to bound memory usage.
+### ADR-6 — Zustand `history` as `useEffect` dependency
+The Zustand store exposes `collection`, `features`, `filteredFeatures` as plain functions with stable references. `useEffect` must depend on `history` (the raw state object) — not `collection()` — to re-run on state mutations.
 
-**Trade-off:** Slightly more verbose than simple state snapshots, but enables precise undo semantics per operation type.
+**Root cause of React markers bug:** `useEffect([collection, updateData])` never re-ran because `collection` is a stable function reference. Fix: `useEffect([history, updateData])`.
 
-### ADR-7 — localStorage as Repository via Interface
-`IPoiRepository` decouples storage from business logic. The current implementation (`LocalStoragePoiRepository`) satisfies the MVP. Migrating to HTTP API requires only a new class implementing the same 3-method interface — zero changes to use-cases or UI layers.
+### ADR-7 — MapLibre data buffering pattern
+MapLibre's `source.setData()` can only be called after the `load` event fires. Both apps implement a buffer:
 
-**Trade-off:** localStorage has a ~5MB limit and is synchronous. For large datasets, IndexedDB or a backend would be needed.
+- **React (`useMapLibre`):** `pendingDataRef` — stores the latest collection if called before load; flushed inside `map.on('load')`
+- **Angular (`MapService`):** `pendingCollection` property — same pattern, flushed in `setupSourceAndLayers()`
 
-### ADR-8 — AI Smart Fixer (offline, no LLM API)
-Category inference uses regex pattern matching against 11 category rules. Coordinate repair detects swapped `[lat, lon]` by checking range heuristics. No external API calls, no latency, no cost.
+Without this, POI markers from `restore()` or initial state silently disappear — `setData()` is called before the source exists.
 
-**Trade-off:** Pattern matching cannot handle ambiguous or multilingual POI names. Upgrading to an LLM API requires only replacing `inferCategory()` with an async function.
+### ADR-8 — Command Pattern for Undo/Redo with description support
+Each mutation is a `Command` with `execute()` and `undo()`. The `description` field is captured in both `prev` and `next` snapshots inside `updatePoiCommand` — undoing a description edit correctly restores the prior value. History capped at 50 steps.
 
-### ADR-9 — Grid Snapping (4 decimal places)
-Map click coordinates are rounded to 4 decimal places (~11m precision at the equator). This produces clean, reproducible coordinates aligned to an implicit grid.
+### ADR-9 — `IPoiRepository` — storage-agnostic interface
+`LocalStoragePoiRepository` serializes the full `FeatureCollection` via `JSON.stringify`. Adding the `description` field required **zero changes** to the repository — the interface is property-agnostic by design.
 
-**Trade-off:** Sub-11m precision is lost. Configurable via `SnapOptions.precision` if higher precision is needed.
+**Migration path:** Replace with `HttpPoiRepository` implementing the same 3-method interface — zero changes to use-cases, services, or UI.
+
+### ADR-10 — Grid Snapping (4 decimal places, ~11m)
+Map click coordinates are rounded to 4 decimal places before storage. Configurable via `SnapOptions.precision`. Applied in both `MapService` (Angular) and `useMapLibre` (React).
 
 ---
 
 ## 🧪 Testing
 
 ```bash
-# Run all tests once
-cd libs/core && pnpm vitest run
-
-# Run with coverage report
 cd libs/core && pnpm vitest run --coverage
-
-# Watch mode (development)
-cd libs/core && pnpm vitest
 ```
-
-### Coverage Summary
 
 ```
 Test Files : 7 passed
 Tests      : 71 passed
-
-File                        | Stmts  | Branch | Funcs  |
-----------------------------|--------|--------|--------|
-poi.use-cases.ts            | 100%   | 100%   | 100%   |
-geojson.validator.ts        |  90%   |  88%   | 100%   |
-category-inference.ts       | 100%   | 100%   | 100%   |
-coordinate-repair.ts        | 100%   | 100%   | 100%   |
-smart-fixer.ts              | 100%   | 100%   | 100%   |
-command.types.ts            | 100%   | 100%   | 100%   |
-poi.commands.ts             | 100%   | 100%   | 100%   |
-poi-filter.ts               | 100%   | 100%   | 100%   |
-snap.ts                     | 100%   | 100%   | 100%   |
-----------------------------|--------|--------|--------|
-Overall                     |  96%   |  95%   |  91%   |
+Coverage   : 96.46% statements
+             95.09% branches
+             91.66% functions
+             (infrastructure/ excluded — requires browser localStorage API)
 ```
-
-> `infrastructure/` (LocalStoragePoiRepository) is excluded from coverage — it requires browser `localStorage` API not available in Node.js test environment.
 
 ---
 
 ## 🐳 Docker
 
 ```bash
-# Build both images
-docker compose build --no-cache
-
-# Start detached
-docker compose up -d
-
-# Stop
-docker compose down
-
-# Rebuild single service
-docker compose build --no-cache angular-client
-docker compose build --no-cache react-client
+docker compose build --no-cache   # full rebuild
+docker compose up -d              # start detached
+docker compose down               # stop
+docker compose build angular-client --no-cache  # rebuild single service
 ```
 
-Both apps use multi-stage builds: Node 20 Alpine builder → Nginx 1.25 Alpine runtime.
+**Angular Dockerfile notes:**
+- Runs `pnpm nx reset` before build — clears stale project graph cache from host machine
+- Root `tsconfig.json` must be present — referenced by `libs/design-system-angular/tsconfig.json` via `"extends": "../../tsconfig.json"`
+- Copies `libs/design-tokens` + `libs/design-system-angular` into build context
+
+**React Dockerfile notes:**
+- Uses `npx vite build` directly (not `nx build react-app`) — bypasses Nx cache issues in CI
+- Copies `libs/design-tokens` + `libs/design-system-react` into build context
 
 ---
 
 ## 🔦 Lighthouse CI
 
-Performance and accessibility audits run against both apps:
-
 ```bash
-# Install Lighthouse CI
 npm install -g @lhci/cli
-
-# Run audits (requires both Docker containers running)
 lhci autorun
-
-# Reports saved to
-./lighthouse-results/
+# Reports → ./lighthouse-results/
 ```
 
-### Current Results (local Docker)
+| Metric | Local Docker | Threshold |
+|---|---|---|
+| First Contentful Paint | ~4.4s | warn > 3s |
+| Time to Interactive | ~5s | warn > 6s |
+| Accessibility | ✅ pass | > 0.8 |
+| Best Practices | ✅ pass | > 0.8 |
 
-| Metric | Angular | React | Threshold |
-|---|---|---|---|
-| First Contentful Paint | ~4.4s | ~4.3s | warn > 3s |
-| Time to Interactive | ~5s | ~5.3s | warn > 6s |
-| Accessibility | ✅ | ✅ | > 0.8 |
-| Best Practices | ✅ | ✅ | > 0.8 |
-
-> FCP is higher than ideal in local Docker due to MapLibre GL JS bundle size (~1.4MB) and absence of CDN/HTTP2/compression. Production deployment would reduce FCP to ~1s.
-
----
-
-## 🔧 Scripts Reference
-
-```bash
-# Development
-pnpm nx serve angular-app              # Angular dev server :4200
-pnpm nx serve react-app                # React dev server (Vite) :3000
-
-# Production build
-pnpm nx build angular-app --configuration=production
-cd apps/react-app && npx vite build
-
-# Tests
-cd libs/core && pnpm vitest run                # run once
-cd libs/core && pnpm vitest run --coverage     # with coverage
-cd libs/core && pnpm vitest                    # watch mode
-
-# Lint
-pnpm nx lint angular-app
-pnpm nx lint react-app
-
-# Docker
-docker compose build --no-cache        # full rebuild
-docker compose up -d                   # start detached
-docker compose down                    # stop all
-
-# Lighthouse
-lhci autorun                           # run audits
-```
+FCP is above threshold in local Docker — MapLibre GL JS bundle (~1.4MB) + no CDN/HTTP2/compression. Production deployment with CDN reduces FCP to ~1s.
 
 ---
 
 ## ⚠️ Known Limitations & Future Improvements
 
-- **Point-only geometry** — only GeoJSON `Point` features are supported. Lines and Polygons would require extending `PoiFeature` with union types and adding corresponding MapLibre paint layers.
-- **Single-user, single-browser** — localStorage is per-browser with no sync. Multi-user support requires a backend implementing `IPoiRepository` over HTTP.
-- **AI Smart Fixer ambiguity** — coordinates where both values fit within `[-90, 90]` (e.g. Colombian coordinates `[-74, 4.7]`) cannot be auto-detected as swapped without geographic context.
-- **Bundle size** — MapLibre GL JS adds ~1.4MB. Code-splitting or dynamic imports could reduce initial load.
-- **No authentication** — MVP assumes single authenticated user.
-- **Accessibility** — ARIA labels and keyboard navigation are partially implemented. Full WCAG 2.1 AA compliance is a next step.
+- **Point-only geometry** — only `Point` features are supported. Lines/Polygons require extending `PoiFeature` with union types and adding new MapLibre paint layers
+- **Single-user** — localStorage has no sync. Multi-user requires `HttpPoiRepository` implementing `IPoiRepository`
+- **`CategoryId` duplication** — type defined in both `@geo-editor/ui-react` and `@geo-editor/ui-angular`. Recommended refactor: move to `libs/core/src/domain/category.types.ts` as single source of truth. See `libs/core/README.md#pending-refactors`
+- **AI Smart Fixer ambiguity** — coordinates where both values fit `[-90, 90]` (e.g. Colombian `[-74, 4.7]`) cannot be auto-detected as swapped without geographic context
+- **Bundle size** — MapLibre adds ~1.4MB initial; dynamic import or splitting would reduce first load
+- **Accessibility** — ARIA labels present on all DS interactive components; full WCAG 2.1 AA audit pending
 
 ---
 
