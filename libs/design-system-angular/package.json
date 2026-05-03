@@ -8,6 +8,10 @@
   "exports": {
     ".": { "import": "./src/index.ts" }
   },
+  "scripts": {
+    "storybook": "storybook dev -p 6007",
+    "build-storybook": "storybook build --output-dir ../../storybook-dist/angular"
+  },
   "peerDependencies": {
     "@angular/core": ">=18",
     "@angular/common": ">=18",
@@ -20,7 +24,12 @@
     "@angular/forms": "^18.0.0",
     "@angular/platform-browser": "^18.0.0",
     "@geo-editor/tokens": "workspace:*",
+    "@storybook/addon-a11y": "^8.6.18",
+    "@storybook/addon-essentials": "^8.6.18",
+    "@storybook/addon-themes": "^8.6.18",
+    "@storybook/angular": "^8.6.18",
     "@types/node": "^24.12.2",
+    "storybook": "^8.6.18",
     "tslib": "^2.0.0",
     "typescript": "~6.0.2"
   }

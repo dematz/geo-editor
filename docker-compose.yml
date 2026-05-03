@@ -64,6 +64,22 @@ services:
     profiles:
       - dev
 
+  # ── Storybook Angular-App (optional) ───────────────────────────
+  storybook-angular:
+    build:
+      context: .
+      dockerfile: libs/design-system-angular/Dockerfile.storybook
+    container_name: geo-editor-storybook-angular
+    ports:
+      - "${STORYBOOK_ANGULAR_PORT:-6007}:80"
+    restart: unless-stopped
+    networks:
+      - geo-net
+    labels:
+      - "com.example.description=Angular Design System Storybook"
+    profiles:
+      - dev
+
   # ── Lighthouse CI (optional) ────────────────────────────
   lighthouse:
     image: patrickhulce/lhci-client:latest

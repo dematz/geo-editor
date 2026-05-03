@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../out-tsc/storybook",
+    "types": ["node"]
+  },
+  "files": [
+    "../../../apps/angular-app/src/test.ts"
+  ],
+  "include": [
+    "../**/*.stories.ts",
+    "../**/*.d.ts"
+  ]
+}
