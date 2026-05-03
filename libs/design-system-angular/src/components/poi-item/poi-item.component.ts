@@ -7,9 +7,14 @@ import { CATEGORY_COLORS } from '../../utils/category-types';
 
 const CATEGORY_ICONS: Record<CategoryId, IconName> = {
   restaurant: 'utensils',
+  cafe:       'coffee',
   hotel:      'hotel',
   park:       'trees',
+  museum:     'landmark',
   hospital:   'cross',
+  transport:  'bus',
+  education:  'graduation-cap',
+  shop:       'shopping-bag',
   custom:     'map-pin',
 };
 
@@ -34,14 +39,12 @@ const CATEGORY_ICONS: Record<CategoryId, IconName> = {
       >
         <ds-icon [name]="iconName()" class="icon" [style.color]="color()" />
       </div>
-
       <div class="content">
         <p class="name">{{ name }}</p>
         <p class="coords">
           {{ lat | number: '1.4-4' }}, {{ lng | number: '1.4-4' }}
         </p>
       </div>
-
       <div class="actions" *ngIf="edit || delete" [attr.aria-label]="'Actions'">
         <button
           *ngIf="edit"
@@ -76,11 +79,11 @@ export class DsPoiItemComponent {
   @Input() selected = false;
 
   @Output() onClick = new EventEmitter<string>();
-  @Output() edit = new EventEmitter<string>();
-  @Output() delete = new EventEmitter<string>();
+  @Output() edit    = new EventEmitter<string>();
+  @Output() delete  = new EventEmitter<string>();
 
-  color = computed(() => CATEGORY_COLORS[this.category]);
-  iconName = computed(() => CATEGORY_ICONS[this.category]);
+  color           = computed(() => CATEGORY_COLORS[this.category]);
+  iconName        = computed(() => CATEGORY_ICONS[this.category]);
   badgeBackground = computed(() => {
     const color = this.color();
     return `color-mix(in oklab, ${color} 18%, transparent)`;

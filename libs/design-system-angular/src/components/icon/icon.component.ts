@@ -91,6 +91,39 @@ import type { IconName } from '../../utils/category-types';
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
         <circle cx="12" cy="10" r="3" />
       </g>
+
+      <!-- ── Nuevos iconos de categoría ── -->
+      <g *ngSwitchCase="'coffee'">
+        <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+        <line x1="6" y1="1" x2="6" y2="4" />
+        <line x1="10" y1="1" x2="10" y2="4" />
+        <line x1="14" y1="1" x2="14" y2="4" />
+      </g>
+      <g *ngSwitchCase="'landmark'">
+        <line x1="3" y1="22" x2="21" y2="22" />
+        <line x1="6" y1="18" x2="6" y2="11" />
+        <line x1="10" y1="18" x2="10" y2="11" />
+        <line x1="14" y1="18" x2="14" y2="11" />
+        <line x1="18" y1="18" x2="18" y2="11" />
+        <polygon points="12 2 20 7 4 7" />
+      </g>
+      <g *ngSwitchCase="'bus'">
+        <rect x="2" y="4" width="20" height="14" rx="2" />
+        <path d="M2 8h20M7 4v4M17 4v4" />
+        <circle cx="7" cy="19" r="1" />
+        <circle cx="17" cy="19" r="1" />
+        <path d="M7 18H5a1 1 0 0 1-1-1v-1M17 18h2a1 1 0 0 0 1-1v-1" />
+      </g>
+      <g *ngSwitchCase="'graduation-cap'">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+        <path d="M6 12v5c3 3 9 3 12 0v-5" />
+      </g>
+      <g *ngSwitchCase="'shopping-bag'">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <path d="M16 10a4 4 0 0 1-8 0" />
+      </g>
     </svg>
   `,
   styles: [':host { display: inline-flex; align-items: center; justify-content: center; }'],

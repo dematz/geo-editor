@@ -2,13 +2,28 @@ import * as React from 'react';
 import { cn } from '../../utils/cn';
 import styles from './CategoryChip.module.css';
 
-export type CategoryId = 'restaurant' | 'hotel' | 'park' | 'hospital' | 'custom';
+export type CategoryId =
+  | 'restaurant'
+  | 'cafe'
+  | 'hotel'
+  | 'park'
+  | 'museum'
+  | 'hospital'
+  | 'transport'
+  | 'education'
+  | 'shop'
+  | 'custom';
 
 export const CATEGORY_COLORS: Record<CategoryId, string> = {
   restaurant: 'var(--ds-cat-restaurant)',
+  cafe:       'var(--ds-cat-restaurant)',  // reutiliza naranja
   hotel:      'var(--ds-cat-hotel)',
   park:       'var(--ds-cat-park)',
+  museum:     'var(--ds-cat-park)',        // reutiliza verde
   hospital:   'var(--ds-cat-hospital)',
+  transport:  'var(--ds-cat-hotel)',       // reutiliza índigo
+  education:  'var(--ds-cat-custom)',      // reutiliza slate
+  shop:       'var(--ds-cat-custom)',      // reutiliza slate
   custom:     'var(--ds-cat-custom)',
 };
 
