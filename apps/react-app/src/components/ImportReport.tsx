@@ -5,10 +5,6 @@ interface ImportReportProps {
   onDismiss: () => void;
 }
 
-/**
- * P3 — Migrated to use DS tokens via inline CSS custom properties.
- * No external class dependencies — fully self-contained using --ds-* tokens.
- */
 export function ImportReport({ result, onDismiss }: ImportReportProps) {
   if (!result) return null;
 

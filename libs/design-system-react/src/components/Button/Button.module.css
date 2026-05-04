@@ -95,7 +95,7 @@
   background: var(--ds-topbar-btn-hover);
 }
 
-/* ── Tamaños ────────────────────────────────── */
+/* ── Size ────────────────────────────────── */
 .size-sm {
   height: 2rem;       /* 32px */
   padding: 0 var(--ds-space-3);

@@ -9,24 +9,18 @@ WORKDIR /app
 
 RUN npm install -g pnpm@9
 
-# Copy workspace manifests first (cache layer)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY nx.json tsconfig.base.json ./
-
-# Copy .npmrc for build script approvals
 COPY .npmrc ./.npmrc
 
-# Copy package.json files for workspace resolution
 COPY libs/design-system-react/package.json ./libs/design-system-react/
 COPY libs/design-tokens/package.json       ./libs/design-tokens/
 
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
 COPY libs/design-system-react ./libs/design-system-react
 COPY libs/design-tokens       ./libs/design-tokens
 
-# Build Storybook static site
 WORKDIR /app/libs/design-system-react
 RUN pnpm build-storybook
 

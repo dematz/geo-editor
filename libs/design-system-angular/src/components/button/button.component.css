@@ -33,7 +33,7 @@
   pointer-events: none;
 }
 
-/* ── Variantes ─────────────────────────────── */
+/* ── Variant ─────────────────────────────── */
 .variant-primary {
   background: var(--ds-primary);
   color: var(--ds-primary-fg);
@@ -86,7 +86,7 @@
   background: var(--ds-accent);
 }
 
-/* ── Tamaños ────────────────────────────────── */
+/* ── Sizes ────────────────────────────────── */
 .size-sm {
   height: 2rem;
   padding: 0 var(--ds-space-3);

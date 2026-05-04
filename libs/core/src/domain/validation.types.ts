@@ -22,5 +22,5 @@ export interface ImportResult {
   readonly imported: PoiFeature[];
   readonly errors: ValidationError[];
   readonly totalProcessed: number;
-  readonly summary: string; // "Importadas 28 / Descartadas 3 (2 coord. inválidas, 1 sin name)"
+  readonly summary: string;
 }

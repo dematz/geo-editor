@@ -158,7 +158,6 @@ export class AppComponent implements OnInit {
 
   onModalSave(data: PoiFormData): void {
     if (this.editingPoi()) {
-      // ── feat(description): include description in update ──
       this.poiSvc.updatePoint(this.editingPoi()!.id!, {
         name:        data.name,
         category:    data.category,
@@ -170,7 +169,6 @@ export class AppComponent implements OnInit {
           ? { lat: parseFloat(data.lat), lng: parseFloat(data.lng) }
           : null);
       if (coords && !isNaN(coords.lat) && !isNaN(coords.lng)) {
-        // ── feat(description): pass description when creating POI ──
         this.poiSvc.addPoint(coords, data.name, data.category, data.description);
       }
     }

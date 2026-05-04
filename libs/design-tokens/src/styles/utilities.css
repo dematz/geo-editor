@@ -1,18 +1,3 @@
-/**
- * @geo-editor/tokens — utilities.css
- *
- * Utilidades de layout puras — sin estado, sin interactividad.
- * NO incluye clases de componentes (.ds-button, .ds-input).
- * Esas viven en cada lib de framework.
- *
- * CRITERIO de inclusión:
- *   ✅ Layout estructural (flex, grid, positioning)
- *   ✅ Visibilidad accesible (sr-only)
- *   ❌ Estilos de componentes con estado
- *   ❌ Variantes de color
- */
-
-/* ── App shell ────────────────────────────────────────────── */
 .ds-app-shell {
   display: flex;
   flex-direction: column;
@@ -25,7 +10,7 @@
 .ds-app-body {
   display: flex;
   flex: 1;
-  min-height: 0;   /* evita overflow en Firefox */
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -35,7 +20,6 @@
   overflow: hidden;
 }
 
-/* ── Sidebar transition ───────────────────────────────────── */
 .ds-sidebar-wrapper {
   position: relative;
   flex-shrink: 0;
@@ -53,7 +37,6 @@
   width: 0;
 }
 
-/* ── Accesibilidad ────────────────────────────────────────── */
 .ds-sr-only {
   position: absolute;
   width: 1px;
@@ -66,7 +49,6 @@
   border-width: 0;
 }
 
-/* ── Tipografía de sección ────────────────────────────────── */
 .ds-section-label {
   font-size: var(--ds-text-xs);
   font-weight: var(--ds-font-semibold);
@@ -75,7 +57,6 @@
   color: var(--ds-muted-fg);
 }
 
-/* ── Coordenadas tabulares ────────────────────────────────── */
 .ds-coords {
   font-size: var(--ds-text-xs);
   font-variant-numeric: tabular-nums;
@@ -83,7 +64,6 @@
   font-feature-settings: var(--ds-font-feature-tabular);
 }
 
-/* ── Empty state ──────────────────────────────────────────── */
 .ds-empty-state {
   display: flex;
   flex-direction: column;
@@ -96,7 +76,6 @@
   line-height: var(--ds-leading-relaxed);
 }
 
-/* ── Overlay modal ────────────────────────────────────────── */
 .ds-modal-overlay {
   position: fixed;
   inset: 0;
@@ -119,7 +98,6 @@
   overflow: hidden;
 }
 
-/* ── Spinner ──────────────────────────────────────────────── */
 .ds-spinner {
   width: 1em;
   height: 1em;

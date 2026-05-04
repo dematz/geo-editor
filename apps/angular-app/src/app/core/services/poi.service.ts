@@ -39,12 +39,10 @@ export class PoiService {
 
   // ── Mutations ──────────────────────────────────────────
 
-  // ── feat(description): forward optional description to addPoiCommand ──
   addPoint(coords: LngLat, name: string, category: string, description?: string): void {
     this._apply(addPoiCommand(coords, name, category, description));
   }
 
-  // ── feat(description): include description in prev snapshot and updates ──
   updatePoint(id: string | number, updates: Partial<{ name: string; category: string; description: string }>): void {
     const poi = this.features().find((f) => f.id === id);
     if (!poi) return;

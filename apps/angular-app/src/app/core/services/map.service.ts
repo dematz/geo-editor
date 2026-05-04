@@ -21,8 +21,6 @@ export class MapService {
   private map!: Map;
   private readonly zone = inject(NgZone);
   private styleLoaded = false;
-
-  // ── FIX: buffer collection that arrives before map 'load' fires ──
   private pendingCollection: PoiFeatureCollection | null = null;
 
   private readonly SOURCE_ID        = 'pois-source';
@@ -46,7 +44,6 @@ export class MapService {
         this.setupSourceAndLayers();
         this.styleLoaded = true;
 
-        // ── FIX: flush data that arrived before the map was ready ──
         if (this.pendingCollection) {
           const source = this.map.getSource(this.SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
           source?.setData(this.pendingCollection as GeoJSON.FeatureCollection);
@@ -59,7 +56,6 @@ export class MapService {
           layers: [this.LAYER_ID],
         });
         if (features.length === 0) {
-          // ── Snap coordinates to 4-decimal grid (~11m precision) ──
           const snapped = snapToGrid(e.lngLat.lng, e.lngLat.lat);
           this.zone.run(() => onMapClick(snapped));
         }
@@ -76,7 +72,6 @@ export class MapService {
 
   updateData(collection: PoiFeatureCollection): void {
     if (!this.styleLoaded) {
-      // ── FIX: buffer data until the map 'load' event fires ──
       this.pendingCollection = collection;
       return;
     }

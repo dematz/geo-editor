@@ -1,14 +1,17 @@
 # ── Dependencies ────────────────────────────────────────────
 node_modules/
+**/node_modules/
 .pnpm-store/
 .npm/
 
 # ── Build outputs ───────────────────────────────────────────
 dist/
+**/dist/
 build/
 .angular/
-# Ignorar salidas de compilación específicas de apps
+storybook-dist/
 apps/*/dist/
+libs/*/dist/
 
 # ── Nx & Cache ──────────────────────────────────────────────
 .nx/cache
@@ -24,6 +27,8 @@ apps/*/dist/
 
 # ── Logs ────────────────────────────────────────────────────
 *.log
+# Log específico detectado en la raíz de tu proyecto
+debug-storybook.log
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
@@ -32,8 +37,8 @@ yarn-error.log*
 # ── OS / IDE ────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
-# Bloquear toda la carpeta .vscode, no solo el settings.json
 .vscode/
+**/ .vscode/
 !.vscode/extensions.json
 .idea/
 *.suo
@@ -44,6 +49,7 @@ Thumbs.db
 
 # ── Test / Coverage ─────────────────────────────────────────
 coverage/
+**/coverage/
 .vitest-cache/
 htmlcov/
 .tox/

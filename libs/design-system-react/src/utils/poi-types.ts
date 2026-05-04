@@ -1,8 +1,3 @@
-/**
- * POI domain types for design-system-react.
- * Kept minimal — full domain types live in @geo-editor/core.
- */
-
 export type CategoryId =
   | 'restaurant'
   | 'hotel'

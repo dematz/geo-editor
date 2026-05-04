@@ -1,12 +1,3 @@
-/**
- * @geo-editor/tokens — maplibre.css
- *
- * Overrides de MapLibre GL para look cartográfico consistente.
- * Reemplaza los estilos inline hardcodeados del componente original.
- * Solo afecta clases .maplibregl-* — sin conflictos con UI.
- */
-
-/* ── Atribución ───────────────────────────────────────────── */
 .maplibregl-ctrl-attrib {
   background: oklch(1 0 0 / 0.75) !important;
   font-size: var(--ds-text-2xs) !important;
@@ -14,7 +5,6 @@
   border-radius: var(--ds-radius-sm) !important;
 }
 
-/* ── Popup ────────────────────────────────────────────────── */
 .maplibregl-popup-content {
   border-radius: var(--ds-radius-md) !important;
   box-shadow: var(--ds-shadow-card) !important;
@@ -41,7 +31,6 @@
   background: var(--ds-accent) !important;
 }
 
-/* ── Navigation controls ──────────────────────────────────── */
 .maplibregl-ctrl-group {
   border-radius: var(--ds-radius-md) !important;
   box-shadow: var(--ds-shadow-card) !important;
@@ -57,7 +46,6 @@
   background: var(--ds-accent) !important;
 }
 
-/* ── Marker base (estilos del marcador circular custom) ────── */
 .ds-map-marker {
   width: 22px;
   height: 22px;
@@ -77,7 +65,6 @@
   outline-offset: 2px;
 }
 
-/* ── Counter badge (top-right del mapa) ───────────────────── */
 .ds-map-counter {
   position: absolute;
   top: var(--ds-space-4);

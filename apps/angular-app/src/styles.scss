@@ -1,12 +1,6 @@
 /* Global styles — geo-editor Angular app */
 
-/* MapLibre CSS — must come before tokens */
 @import 'maplibre-gl/dist/maplibre-gl.css';
-
-/*
- * @geo-editor/tokens is loaded via angular.json styles array
- * before this file — all --ds-* variables are available here.
- */
 
 html, body {
   height: 100%;

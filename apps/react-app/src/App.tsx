@@ -12,7 +12,9 @@ import type { ImportResult, PoiFeature, LngLat } from '@geo-editor/core';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 export default function App() {
+
   const mapContainer = useRef<HTMLDivElement>(null);
+
   const {
     restore, filteredFeatures, collection, selectedId,
     loadCollection, selectPoint, removePoint, setFilter,
@@ -20,11 +22,8 @@ export default function App() {
     clearAll, addPoint, updatePoint, features,
   } = usePoiStore();
 
-  // ── FIX (markers): subscribe to `history` (changes on every mutation)
-  //    instead of `collection` (stable function ref that never re-renders).
   const history = usePoiStore(s => s.history);
 
-  // ── UI state ────────────────────────────────────────
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [search, setSearch]                     = useState('');
   const [showForm, setShowForm]                 = useState(false);
@@ -32,7 +31,6 @@ export default function App() {
   const [editingPoi, setEditingPoi]             = useState<PoiFeature | null>(null);
   const [importResult, setImportResult]         = useState<ImportResult | null>(null);
 
-  // ── Map ─────────────────────────────────────────────
   const { updateData, flyTo, highlightPoi } = useMapLibre(mapContainer, (coords) => {
     setPendingCoords(coords);
     setEditingPoi(null);
@@ -41,15 +39,10 @@ export default function App() {
 
   const { importGeoJson, exportGeoJson } = useFileIo();
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { restore(); }, []);
-
-  // ── FIX (markers): depend on `history` so effect re-runs on every mutation ──
   useEffect(() => { updateData(collection()); }, [history, updateData]);
-
   useEffect(() => { highlightPoi(selectedId); }, [selectedId, highlightPoi]);
 
-  // ── Handlers ────────────────────────────────────────
   function handleSearchChange(value: string) {
     setSearch(value);
     setFilter({ query: value });
@@ -116,7 +109,6 @@ export default function App() {
 
   function handleFormSave(data: POIFormData) {
     if (editingPoi) {
-      // ── feat(description): include description in updates ──
       updatePoint(editingPoi.id!, {
         name:        data.name,
         category:    data.category,
@@ -125,7 +117,6 @@ export default function App() {
     } else if (pendingCoords || (data.lat && data.lng)) {
       const coords = pendingCoords ?? { lat: parseFloat(data.lat), lng: parseFloat(data.lng) };
       if (!isNaN(coords.lat) && !isNaN(coords.lng)) {
-        // ── feat(description): pass description when creating POI ──
         addPoint(coords, data.name, data.category, data.description);
       }
     }
@@ -134,7 +125,6 @@ export default function App() {
     setPendingCoords(null);
   }
 
-  // ── Derived state ───────────────────────────────────
   const allPois    = filteredFeatures();
   const mappedPois = allPois.map(f => ({
     id:       String(f.id),

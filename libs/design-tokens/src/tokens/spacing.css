@@ -1,12 +1,4 @@
-/**
- * @geo-editor/tokens — spacing.css
- *
- * Espaciado base 4px, radios, sombras, z-index y dimensiones
- * de componentes específicos del dominio GeoEditor.
- */
-
 :root {
-  /* ── Espaciado (base 4px) ─────────────────────────────── */
   --ds-space-px:   1px;
   --ds-space-0-5:  0.125rem;  /*  2px */
   --ds-space-1:    0.25rem;   /*  4px */
@@ -24,7 +16,6 @@
   --ds-space-12:   3rem;      /* 48px */
   --ds-space-16:   4rem;      /* 64px */
 
-  /* ── Border radius ────────────────────────────────────── */
   --ds-radius-none: 0;
   --ds-radius-sm:   0.25rem;   /*  4px — controles compactos  */
   --ds-radius-md:   0.5rem;    /*  8px — inputs, cards        */
@@ -33,7 +24,6 @@
   --ds-radius-2xl:  1rem;      /* 16px — reserved             */
   --ds-radius-full: 9999px;    /* pills, avatares, markers    */
 
-  /* ── Sombras ──────────────────────────────────────────── */
   --ds-shadow-card:
     0 1px 2px 0   oklch(0.2 0.02 250 / 0.06),
     0 1px 3px 0   oklch(0.2 0.02 250 / 0.08);
@@ -56,7 +46,6 @@
   --ds-shadow-focus:
     0 0 0 3px var(--ds-ring);
 
-  /* ── Z-index scale ────────────────────────────────────── */
   --ds-z-base:     0;
   --ds-z-raised:   1;
   --ds-z-dropdown: 10;
@@ -65,7 +54,6 @@
   --ds-z-modal:    50;
   --ds-z-toast:    100;
 
-  /* ── Transiciones ─────────────────────────────────────── */
   --ds-duration-fast:   100ms;
   --ds-duration-normal: 200ms;
   --ds-duration-slow:   300ms;
@@ -73,7 +61,6 @@
   --ds-ease-out:        cubic-bezier(0.16, 1, 0.3, 1);
   --ds-ease-in:         cubic-bezier(0.4, 0, 1, 1);
 
-  /* ── Dimensiones de componentes de dominio ────────────── */
   --ds-topbar-height:       3.5rem;    /* 56px */
   --ds-sidebar-width:       17.5rem;   /* 280px */
   --ds-sidebar-width-collapsed: 0px;

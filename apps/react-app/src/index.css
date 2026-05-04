@@ -1,11 +1,3 @@
-/*
- * apps/react-app/src/index.css
- *
- * @geo-editor/tokens is imported in main.tsx — all --ds-* vars available here.
- * This file only defines app-level layout shells not covered by the DS.
- * No resets here — libs/design-tokens/src/styles/reset.css handles that.
- */
-
 /* ── App shell layout ─────────────────────────────────── */
 .app-shell {
   display: flex;
@@ -20,12 +12,10 @@
   display: flex;
   flex: 1;
   min-height: 0;
-  /* ── FIX: position relative para que el sidebar absolute se ancle aquí ── */
   position: relative;
   overflow: hidden;
 }
 
-/* ── FIX: el mapa ocupa siempre el 100% — el sidebar flota encima ── */
 .app-map {
   flex: 1;
   min-width: 0;

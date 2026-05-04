@@ -6,7 +6,6 @@ import styles from './Select.module.css';
 export interface SelectOption {
   value: string;
   label: string;
-  /** Optional colored dot before label */
   colorVar?: string;
 }
 

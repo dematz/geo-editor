@@ -1,32 +1,21 @@
-# ============================================================
-# libs/design-system-angular/Dockerfile.storybook
-# Multi-stage build: Node builder → Nginx runtime
-# ============================================================
-
 # ── Stage 1: Build ────────────────────────────────────────────
 FROM node:20-alpine AS builder
 WORKDIR /app
 
 RUN npm install -g pnpm@9
 
-# Copy workspace manifests first (cache layer)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY nx.json tsconfig.base.json ./
-
-# Copy .npmrc for build script approvals
 COPY .npmrc ./.npmrc
 
-# Copy package.json files for workspace resolution
 COPY libs/design-system-angular/package.json ./libs/design-system-angular/
 COPY libs/design-tokens/package.json       ./libs/design-tokens/
 
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
 COPY libs/design-system-angular ./libs/design-system-angular
 COPY libs/design-tokens       ./libs/design-tokens
 
-# Build Storybook static site
 WORKDIR /app/libs/design-system-angular
 RUN pnpm build-storybook
 

@@ -1,10 +1,3 @@
-/**
- * @geo-editor/ui-react
- *
- * Public API — importar solo desde este archivo.
- * Tokens CSS: import '@geo-editor/tokens' por separado.
- */
-
 // ── Utilities ──────────────────────────────────────────────
 export { cn } from './utils/cn';
 

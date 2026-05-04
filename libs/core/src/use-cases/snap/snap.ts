@@ -1,8 +1,3 @@
-/**
- * Rounds coordinates to a decimal grid. Default precision of 4 decimal places
- * provides ~11m accuracy at the equator — suitable for POI mapping without
- * excessive coordinate noise.
- */
 export interface SnapOptions {
   precision?: number; // decimal places — default 4 (~11m at equator)
 }

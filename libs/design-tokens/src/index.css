@@ -1,36 +1,8 @@
-/**
- * @geo-editor/tokens — index.css
- *
- * Punto de entrada único del design token system.
- *
- * CONSUMO en Angular:
- *   // angular.json → styles array
- *   "node_modules/@geo-editor/tokens/index.css"
- *
- * CONSUMO en React (Vite):
- *   // main.tsx o styles.css
- *   @import '@geo-editor/tokens';
- *   // o
- *   import '@geo-editor/tokens/index.css';
- *
- * ORDEN DE IMPORTS — no modificar:
- *   1. tokens (variables :root)  → deben estar antes que todo
- *   2. reset (usa las variables)
- *   3. animations (keyframes, sin variables)
- *   4. styles (usa variables + keyframes)
- */
 
-/* 1. Tokens — fuente de verdad */
 @import "./tokens/colors.css";
 @import "./tokens/typography.css";
 @import "./tokens/spacing.css";
-
-/* 2. Reset mínimo */
 @import "./styles/reset.css";
-
-/* 3. Animaciones */
 @import "./tokens/animations.css";
-
-/* 4. Utilidades y overrides */
 @import "./styles/utilities.css";
 @import "./styles/maplibre.css";

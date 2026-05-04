@@ -33,9 +33,17 @@ A production-ready Point of Interest (POI) editor built with a **framework-agnos
 ## 🚀 Quick Start
 
 ```bash
+# 0. Prerequisites
+Install Node.js (includes npm) from https://nodejs.org
+npm install -g pnpm
+
 # 1. Clone and install
 git clone <repo-url> && cd geo-editor
 pnpm install
+
+# 1.1 For security reasons, recent versions of pnpm (v9+) block the automatic execution of build scripts for dependencies like nx, esbuild, and @swc/core. To ensure the monorepo functions correctly, you must manually approve them by running:  
+pnpm approve-builds
+#Use the spacebar to select nx and press Enter to confirm.
 
 # 2. Run Angular app  →  http://localhost:4200
 pnpm nx serve angular-app

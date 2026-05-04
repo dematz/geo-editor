@@ -50,13 +50,6 @@ function buildSummary(imported: number, errors: ValidationError[]): string {
   return `Importadas ${imported} / Descartadas ${errors.length} (${details})`;
 }
 
-/**
- * Validates a GeoJSON FeatureCollection and applies smart fixes before full validation.
- * Repairs swapped coordinates and infers missing categories using pattern matching.
- * Smart Fixer runs before coordinate range validation so repairs are included in the final result.
- * @param raw Unknown input to validate as a GeoJSON FeatureCollection
- * @returns ImportResult with imported (fixed) features, validation errors, and summary
- */
 export function validateFeatureCollection(raw: unknown): ImportResult {
   const errors: ValidationError[] = [];
   const imported: PoiFeature[] = [];
@@ -110,7 +103,6 @@ export function validateFeatureCollection(raw: unknown): ImportResult {
       return;
     }
 
-    // ── Smart Fixer: attempt coordinate repair BEFORE range validation ──
     let [lon, lat] = coords as number[];
     let coordsRepaired = false;
     const repairResult = repairCoordinates([lon, lat]);
@@ -136,7 +128,6 @@ export function validateFeatureCollection(raw: unknown): ImportResult {
       return;
     }
 
-    // ── Smart Fixer: infer category if missing ──
     const rawCategory = typeof props['category'] === 'string' && props['category'].trim() !== ''
       ? props['category'].trim()
       : (inferCategory(props['name'] as string) ?? 'other');
@@ -153,7 +144,6 @@ export function validateFeatureCollection(raw: unknown): ImportResult {
     });
   });
 
-  // ── Count Smart Fixer actions for summary ──
   const fixerResult = applySmartFixerToCollection(imported);
 
   const fixerSuffix =

@@ -13,7 +13,6 @@
 
 services:
   # ── Angular App ─────────────────────────────────────────
-  # Builds design-system-angular + core + design-tokens statically
   angular-client:
     build:
       context: .
@@ -30,7 +29,6 @@ services:
       - "com.example.description=Angular POI Editor Client"
 
   # ── React App ───────────────────────────────────────────
-  # Builds design-system-react + core + design-tokens statically
   react-client:
     build:
       context: .

@@ -9,11 +9,9 @@
   background: var(--ds-sidebar);
   color: var(--ds-sidebar-fg);
   border-right: 1px solid var(--ds-sidebar-border);
-  /* ── encima del mapa pero debajo del topbar ── */
   z-index: var(--ds-z-sidebar);
   overflow: visible;
   transition: width var(--ds-duration-normal) var(--ds-ease-out);
-  /* ── sombra para separarse visualmente del mapa ── */
   box-shadow: var(--ds-shadow-card);
 }
 
