@@ -65,6 +65,10 @@ docker compose --profile dev up --build
 # React Storybook
 cd libs/design-system-react && pnpm storybook
 # → http://localhost:6006
+
+# Angular Storybook (Docker only)
+docker compose --profile dev up storybook-angular
+# → http://localhost:6007
 ```
 
 ---
@@ -101,6 +105,9 @@ geo-editor/
 │   │                                POIItem, TopBar, Sidebar, POIFormModal
 │   │
 │   └── design-system-angular/    ← @geo-editor/ui-angular — Angular standalone + ViewEncapsulation.None
+│       ├── .storybook/           ← Storybook v8 config (angular framework, a11y, themes addons)
+│       ├── Dockerfile.storybook  ← Static build → Nginx (port 6007, dev profile)
+│       ├── nginx.storybook.conf  ← Nginx config for Storybook static site
 │       └── src/components/       ← DsButton, DsInput, DsSelect, DsTextarea, DsLabel,
 │                                    DsCategoryChip, DsPoiItem, DsTopBar, DsSidebar,
 │                                    DsPoiFormModal, DsIcon (inline SVG, no external dep)
@@ -284,7 +291,10 @@ The Smart Fixer's `category-inference.ts` returns values that must match the `Ca
 ### ADR-13 — Storybook as optional Docker service (dev profile)
 Storybook is built as a static site (`pnpm build-storybook`) and served by Nginx — same pattern as the apps. It is declared in `docker-compose.yml` under `profiles: [dev]` so it never starts in production deployments (`docker compose up` without `--profile dev`).
 
-**Port convention:** Angular app → 4200, React app → 3001, Storybook React → 6006.
+**React Storybook:** Fully functional, visualizes all shared DS components. 
+**Angular Storybook:** 11 component stories created with TypeScript support and design tokens, but blocked by Storybook 8.6 framework preset architectural incompatibility with monorepo library-first setup (see Known Limitations).
+
+**Port convention:** Angular app → 4200, React app → 3001, Storybook React → 6006, Storybook Angular → 6007.
 
 ---
 
@@ -310,11 +320,18 @@ Coverage   : 96.46% statements
 ```bash
 docker compose build --no-cache                        # full rebuild
 docker compose up -d                                   # start detached (apps only)
-docker compose --profile dev up -d                     # start with Storybook
+docker compose --profile dev up -d                     # start with both Storybook instances
 docker compose down                                    # stop all
 docker compose build angular-client --no-cache         # rebuild single service
-docker compose --profile dev build storybook-react     # rebuild Storybook only
+docker compose --profile dev build storybook-react     # rebuild React Storybook only
+docker compose --profile dev build storybook-angular   # rebuild Angular Storybook only
 ```
+
+**Service ports:**
+- Angular app: 4200
+- React app: 3001
+- Storybook React: 6006 (profile: dev)
+- Storybook Angular: 6007 (profile: dev, **blocker status** — see Known Limitations)
 
 **Angular Dockerfile notes:**
 - Runs `pnpm nx reset` before build — clears stale project graph cache from host machine
@@ -325,10 +342,16 @@ docker compose --profile dev build storybook-react     # rebuild Storybook only
 - Uses `npx vite build` directly (not `nx build react-app`) — bypasses Nx cache issues in CI
 - Copies `libs/design-tokens` + `libs/design-system-react` into build context
 
-**Storybook Dockerfile notes:**
+**Storybook React Dockerfile notes:**
 - Runs `pnpm build-storybook` from `libs/design-system-react` — outputs to `storybook-dist/react`
 - Same Nginx + gzip pattern as the apps
 - Only starts when `--profile dev` is passed to `docker compose`
+
+**Storybook Angular:**
+- 11 component stories created: button, input, select, textarea, label, icon, category-chip, poi-item, top-bar, sidebar, poi-form-modal
+- Build artifacts: `libs/design-system-angular/.storybook/` (config, webpack, presets), `Dockerfile.storybook`, `nginx.storybook.conf`
+- **Known blocker:** Storybook 8.6 Angular requires hardcoded Angular CLI builder configuration (`@angular-devkit/build-angular`) that is incompatible with library-first monorepo setup. The framework preset performs mandatory checks at build time that cannot be bypassed without forking Storybook.
+- **Workaround:** React Storybook (port 6006) serves as the visual reference for all 10 shared component designs. Angular stories are feature-complete but visualization requires Angular app context (stories would display in an Angular app context, not standalone Storybook).
 
 ---
 
@@ -360,7 +383,7 @@ FCP and TTI are above standard web thresholds in local Docker — MapLibre GL JS
 - **AI Smart Fixer ambiguity** — coordinates where both values fit `[-90, 90]` (e.g. Colombian `[-74, 4.7]`) cannot be auto-detected as swapped without geographic context
 - **Bundle size** — MapLibre adds ~1.4MB initial; dynamic import or splitting would reduce first load
 - **Accessibility** — ARIA labels present on all DS interactive components; full WCAG 2.1 AA audit pending
-- **Storybook Angular** — React Storybook is fully configured and dockerized; Angular Storybook pending setup in `libs/design-system-angular`
+- **Storybook Angular** — All 11 component stories created with full TypeScript support and design token integration. **Architectural blocker:** Storybook 8.6 Angular framework preset requires hardcoded Angular CLI builder configuration that cannot be disabled. Workaround: React Storybook (http://localhost:6006) serves as visual reference; Angular stories are code-complete but require integration into an Angular app context for visualization. **Path forward:** Nx Storybook, Storybook 5.x, or alternative (e.g., Cypress Component Testing) if visual isolation is critical for Angular.
 
 ---
 
